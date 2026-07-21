@@ -183,7 +183,7 @@ sha256 = "cafe..."
 
 [environment]
 mode         = "pinned"
-inherit_name = "flox-examples/dev"
+inherit_name = "acme/dev"
 
 [on_active]
 inside = "error"</pre>
@@ -372,12 +372,12 @@ migration history, so the machinery would be cost without benefit.</p>
 written by the installer into the install directory and read by <code>list</code>,
 <code>remove</code>, and <code>upgrade</code>. Users are not meant to edit it.</p>
 
-<div class="filebar"><span>~/.local/share/flox/extensions/flox-hello/state.toml</span></div>
+<div class="filebar"><span>~/.local/share/flox/extensions/flox-hello-script/state.toml</span></div>
 <pre class="code">schema       = "1"
-name         = "hello"
+name         = "hello-script"
 kind         = "script"        # script | binary | local
 source       = "github"        # github | .           ← the future-FloxHub discriminant
-owner        = "smorin"
+owner        = "flox"
 repo         = "flox-hello-script"
 host         = "github.com"    # supports GitHub Enterprise
 tag          = ""              # release tag, for binary kind
@@ -386,7 +386,7 @@ commit       = "c8d5f41..."    # resolved SHA, for script/git kinds
 pinned       = false           # true when installed with --pin
 asset_sha256 = ""              # recorded for binary kind
 installed_at = "2026-04-17T12:34:56Z"
-path         = "/home/me/.local/share/flox/extensions/flox-hello/flox-hello"</pre>
+path         = "/home/me/.local/share/flox/extensions/flox-hello-script/flox-hello-script"</pre>
 
 <h3>Why the split is the right call</h3>
 
