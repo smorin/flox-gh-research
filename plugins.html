@@ -162,8 +162,8 @@ to contain in order to be installable at all.</p>
 </tr>
 <tr>
   <td class="rowhead">Install</td>
-  <td><code>flox extension install smorin/flox-hello-script</code></td>
-  <td><code>flox extension install smorin/flox-hello-binary</code></td>
+  <td><code>flox extension install flox/flox-hello-script</code></td>
+  <td><code>flox extension install flox/flox-hello-binary</code></td>
   <td><code>flox extension install --from-path .</code></td>
 </tr>
 <tr>
@@ -214,7 +214,7 @@ install path, which is the only thing they are meant to test.</p>
 <h2>flox-hello-script — the minimum viable extension</h2>
 
 <div class="repohead">
-  <h3>smorin/flox-hello-script</h3>
+  <h3>flox/flox-hello-script</h3>
   <p class="sub">Script kind · installs as the <code>hello-script</code> extension · invoked as
   <code>flox hello-script</code></p>
 </div>
@@ -287,7 +287,7 @@ from the canonical example.</p>
 <h2>flox-hello-binary — the release pipeline</h2>
 
 <div class="repohead">
-  <h3>smorin/flox-hello-binary</h3>
+  <h3>flox/flox-hello-binary</h3>
   <p class="sub">Binary kind · tagged <code>v0.1.0</code> · macOS only at this version</p>
 </div>
 
@@ -393,7 +393,7 @@ that is correct but discouraging. Flagged on the <a href="risks.html">risks page
 <h2>flox-hello-local — the loop authors actually live in</h2>
 
 <div class="repohead">
-  <h3>smorin/flox-hello-local</h3>
+  <h3>flox/flox-hello-local</h3>
   <p class="sub">Local kind · never installed from GitHub · exercises
   <code>--from-path</code></p>
 </div>
@@ -403,7 +403,7 @@ manifest, the same bash script with a different default name. The difference is 
 gets installed.</p>
 
 <div class="filebar"><span>the local authoring loop</span></div>
-<pre class="code">git clone https://github.com/smorin/flox-hello-local
+<pre class="code">git clone https://github.com/flox/flox-hello-local
 cd flox-hello-local
 
 flox extension install --from-path .      # symlinks into this working tree
