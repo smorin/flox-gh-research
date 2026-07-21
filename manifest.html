@@ -141,10 +141,11 @@ reference extensions ship manifests of four lines.</p>
 
 <div class="grid-2">
   <div class="card card-stripe">
-    <h4>Binary extensions need it</h4>
-    <p>Release assets have names, and flox has to guess one. The manifest lets an author state the
-    naming scheme rather than hope the substring matcher finds the right file. This is the only
-    case the author guide calls <em>required</em>.</p>
+    <h4>Recording a <code>sha256</code></h4>
+    <p>A binary extension installs without a manifest as long as its release assets follow the
+    substring naming convention. A manifest is only needed to record
+    <code>[extension.binary].sha256</code>, which install verifies against the download. The
+    <code>asset</code> template is <em>not</em> consulted by install today (see below).</p>
   </div>
   <div class="card card-stripe">
     <h4>Environment behavior needs it</h4>
@@ -196,15 +197,18 @@ inside = "error"</pre>
 <tbody>
 <tr>
   <td><code>name</code></td><td>string</td><td><span class="req">required</span></td>
-  <td>The extension name, without the <code>flox-</code> prefix. Must match the repo's
+  <td>The extension name, without the <code>flox-</code> prefix. For GitHub installs the name is
+  derived from the repo and this field is <em>not</em> compared against it; only local
+  (<code>--from-path</code>) installs check that it matches. Should match the repo's
   <code>&lt;name&gt;</code> segment. Lowercase, matching
   <code>[a-z0-9][a-z0-9_-]*</code>. This is what the user types after <code>flox</code>, and what
   the installer checks against the reserved-name list.</td>
 </tr>
 <tr>
   <td><code>description</code></td><td>string</td><td><span class="opt">optional</span></td>
-  <td>Short human description, surfaced in <code>list</code> and <code>search</code> output. Purely
-  presentational — nothing branches on it.</td>
+  <td>Short human description. Not currently surfaced anywhere: <code>list</code> has no
+  description column, and <code>search</code> shows the GitHub repository's description rather than
+  this field.</td>
 </tr>
 </tbody>
 </table>
@@ -223,55 +227,60 @@ has only substring matching to work with.</p>
 <tr>
   <td><code>source</code></td><td>string</td><td><span class="req">required</span></td>
   <td>Only <code>"github-release"</code> is accepted today. It exists as a field rather than an
-  assumption so that a future FloxHub or direct-URL source can be added without a schema bump —
-  the same forward-compatibility move as <code>state.toml</code>'s <code>source</code>
-  discriminant.</td>
+  assumption so a future direct-URL or other source could be added without a schema bump. (Note
+  this is the manifest's <code>[extension.binary].source</code>; it is unrelated to
+  <code>state.toml</code>'s <code>source</code> field, which just records where the install came
+  from — a URL or a local path.)</td>
 </tr>
 <tr>
-  <td><code>asset</code></td><td>string</td><td><span class="req">required</span></td>
-  <td>Asset-name template. Placeholders <code>{name}</code>, <code>{os}</code>,
-  <code>{arch}</code>, and <code>{ext}</code> are expanded, then matched against release asset names
-  <em>exactly</em>. Read the placeholder note below before writing one.</td>
+  <td><code>asset</code></td><td>string</td><td><span class="opt">optional / inert</span></td>
+  <td>Asset-name template with <code>{name}</code>/<code>{os}</code>/<code>{arch}</code>/<code>{ext}</code>
+  placeholders. The resolver <em>can</em> render and exact-match it, but <code>install</code> and
+  <code>upgrade</code> call the resolver with no manifest, so the template never runs in practice —
+  asset selection is always substring matching. Setting it has no effect today.</td>
 </tr>
 <tr>
   <td><code>sha256</code></td><td>string</td><td><span class="opt">optional</span></td>
-  <td>Documented as "reserved for future verification." Note that this is <em>not</em> the digest
-  that gets verified at install time — see the verification note below, which is a genuine subtlety.</td>
+  <td>Expected hex digest of the downloaded asset. When set, install verifies the download against
+  it and aborts on mismatch — see the verification note below.</td>
 </tr>
 </tbody>
 </table>
 </div>
 
-<h4>The placeholder that does not do what the docs say</h4>
+<h4>The template does not run — selection is always substring</h4>
 
 <div class="callout">
-<p><strong>The author guide states <code>{os}</code> renders as <code>"darwin"</code>,
-<code>"linux"</code>, or <code>"windows"</code>. It does not.</strong>
-<code>render_asset_template</code> substitutes Rust's raw <code>std::env::consts::OS</code>, which
-is <code>"macos"</code> on macOS. Only <code>{ext}</code> is computed — <code>"zip"</code> on
-Windows, <code>"tar.gz"</code> everywhere else.</p>
-<p>The <code>flox-hello-binary</code> reference repo is correct and the documentation was wrong: its
-assets are named <code>flox-hello-binary-macos-aarch64.tar.gz</code>, which is exactly what the
-template renders.</p>
-<p><strong>Fixed on the v2 branch.</strong> The author guide now names
-<code>std::env::consts::OS</code> as the source, states plainly that the value is <code>macos</code>
-rather than <code>darwin</code>, and explains that only <code>{ext}</code> is computed. The defect
-remains on v1.</p>
-<p>What makes this hard to notice is that following the incorrect documentation still works. An
-author who ships <code>...-darwin-aarch64.tar.gz</code> fails the exact template match, falls
-through to substring matching — which accepts <code>darwin</code> <em>and</em> <code>macos</code> —
-and installs successfully. A wrong doc, masked by a forgiving fallback, is the kind that survives
-for years.</p>
+<p><strong>The bigger surprise is that the <code>asset</code> template is never consulted during a
+real install.</strong> The resolver <code>resolve_asset</code> can render a template
+(<code>render_asset_template</code>) and exact-match it, but both production call sites —
+<code>install</code> and <code>upgrade</code> — invoke it with <em>no manifest</em>, so that branch
+is dead. Asset selection is purely substring matching of platform tokens against release asset
+names.</p>
+<p>That makes the template's <code>{os}</code> rendering moot in practice, but the code has a
+latent trap worth knowing if the template is ever wired in: <code>{os}</code> would substitute
+Rust's raw <code>std::env::consts::OS</code>, which is <code>"macos"</code> on macOS — <em>not</em>
+<code>"darwin"</code> as an author might assume. The <code>flox-hello-binary</code> reference repo
+sidesteps this by naming its assets <code>flox-hello-binary-macos-aarch64.tar.gz</code>, and it
+installs via the substring matcher (which accepts both <code>darwin</code> and <code>macos</code>),
+not the template.</p>
+<p>The earlier v1 docs described this as a documentation defect in the template's <code>{os}</code>
+value. That framing was itself off: the template is not used at all, so the real issue is that the
+author-facing <code>asset</code> field is inert. Flagged for the code review as a likely wiring
+bug.</p>
 </div>
 
 <h4>What sha256 actually verifies</h4>
 
-<p>Commit <code>f692e3016</code> added digest verification, and the distinction matters. The
-digest checked at install time is the one <em>GitHub advertises for the release asset</em>, compared
-against what was actually downloaded — it detects a corrupted or truncated transfer. The
-<code>sha256</code> field in your manifest is not that check. Do not treat a manifest digest as a
-supply-chain guarantee; see the <a href="risks.html">risks page</a> for what the trust model does
-and does not cover.</p>
+<p>Commit <code>f692e3016</code> added digest verification, and it is <strong>the manifest's
+own <code>sha256</code> that gets checked</strong>. At install time the downloaded asset's SHA-256
+is computed and compared against <code>[extension.binary].sha256</code> from the author manifest;
+a mismatch aborts the install. There is no separate GitHub-advertised digest — the
+<code>ReleaseAsset</code> the code fetches carries only name, URL, size, and content type.</p>
+<p>So the field is opt-in integrity, set by the author: it detects a corrupted or tampered
+download against the value the author recorded. It is not a supply-chain guarantee — an author who
+ships a malicious asset and its matching digest passes. See the <a href="risks.html">risks
+page</a>.</p>
 
 <h3><code>[environment]</code></h3>
 
@@ -375,18 +384,18 @@ written by the installer into the install directory and read by <code>list</code
 <div class="filebar"><span>~/.local/share/flox/extensions/flox-hello-script/state.toml</span></div>
 <pre class="code">schema       = "1"
 name         = "hello-script"
-kind         = "script"        # script | binary | local
-source       = "github"        # github | .           ← the future-FloxHub discriminant
+kind         = "script"        # script | git | binary | local
+source       = "https://github.com/flox/flox-hello-script"   # a URL (github) or a filesystem path (local)
 owner        = "flox"
 repo         = "flox-hello-script"
-host         = "github.com"    # supports GitHub Enterprise
+host         = "github.com"    # hardcoded; empty for local. Does not drive cloning.
 tag          = ""              # release tag, for binary kind
 branch       = "main"          # default branch at install time; upgrade fetches this
 commit       = "c8d5f41..."    # resolved SHA, for script/git kinds
 pinned       = false           # true when installed with --pin
-asset_sha256 = ""              # recorded for binary kind
+asset_sha256 = ""              # download digest, for binary kind
 installed_at = "2026-04-17T12:34:56Z"
-path         = "/home/me/.local/share/flox/extensions/flox-hello-script/flox-hello-script"</pre>
+path         = "/home/me/.local/share/flox/extensions/flox-hello-script"   # the install directory</pre>
 
 <h3>Why the split is the right call</h3>
 

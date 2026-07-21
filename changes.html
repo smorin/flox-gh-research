@@ -162,10 +162,10 @@ which is also the branch point. Reproduce with:</p>
 
 <div class="filebar"><span>reproduce this page</span></div>
 <pre class="code">git diff --name-status origin/main
-git diff --shortstat  origin/main   # 31 files changed, 10854 insertions(+), 4 deletions(-)</pre>
+git diff --shortstat  origin/main   # 31 files changed, 10843 insertions(+), 4 deletions(-)</pre>
 
 <div class="stats">
-  <div class="stat"><div class="v">31</div><div class="k">Files changed</div><div class="d">+10,854 / −4</div></div>
+  <div class="stat"><div class="v">31</div><div class="k">Files changed</div><div class="d">+10,843 / −4</div></div>
   <div class="stat"><div class="v">23</div><div class="k">New files</div><div class="d">+10,730</div></div>
   <div class="stat"><div class="v">3</div><div class="k">Edited source files</div><div class="d">in the reviewed crate</div></div>
   <div class="stat"><div class="v">0</div><div class="k">Lines deleted</div><div class="d">from hand-written code</div></div>
@@ -177,13 +177,13 @@ git diff --shortstat  origin/main   # 31 files changed, 10854 insertions(+), 4 d
 <table class="tbl">
 <thead><tr><th>Group</th><th class="n">Files</th><th class="n">+</th><th class="n">−</th><th>What it is</th></tr></thead>
 <tbody>
-<tr><td><strong>New and isolated</strong></td><td class="n">23</td><td class="n">10,730</td><td class="n">0</td>
+<tr><td><strong>New and isolated</strong></td><td class="n">23</td><td class="n">10,719</td><td class="n">0</td>
   <td>New files in new directories. Deleting them returns flox to stock behavior.</td></tr>
 <tr><td><strong>Deliberate wiring</strong></td><td class="n">7</td><td class="n">44</td><td class="n">0</td>
   <td>Pre-existing files edited on purpose. The real blast radius.</td></tr>
 <tr><td>Build artifact</td><td class="n">1</td><td class="n">80</td><td class="n">4</td>
   <td><code>Cargo.lock</code>. Not authored.</td></tr>
-<tr><td><strong>Total</strong></td><td class="n">31</td><td class="n">10,854</td><td class="n">4</td><td></td></tr>
+<tr><td><strong>Total</strong></td><td class="n">31</td><td class="n">10,843</td><td class="n">4</td><td></td></tr>
 </tbody>
 </table>
 </div>
@@ -235,8 +235,8 @@ two manifests bought a completely untouched SDK.</p>
 <table class="tbl">
 <thead><tr><th>File</th><th class="n">Lines</th><th>What it does · why it exists</th></tr></thead>
 <tbody>
-<tr><td class="f">manager.rs</td><td class="n">2,432</td><td>The orchestrator — install, list, remove, upgrade, and the lock discipline. Sole mutator of the extensions directory, which is what makes locking auditable.</td></tr>
-<tr><td class="f">github.rs</td><td class="n">1,804</td><td>REST calls, clone invocation, asset resolution, topic search. One home for the GitHub API surface, one test seam.</td></tr>
+<tr><td class="f">manager.rs</td><td class="n">2,429</td><td>The orchestrator — install, list, remove, upgrade, and the lock discipline. Sole mutator of the extensions directory, which is what makes locking auditable.</td></tr>
+<tr><td class="f">github.rs</td><td class="n">1,802</td><td>REST calls, clone invocation, asset resolution, topic search. One home for the GitHub API surface, one test seam.</td></tr>
 <tr><td class="f">archive.rs</td><td class="n">497</td><td>tar and zip extraction with traversal guards. Separate because extraction is a security boundary.</td></tr>
 <tr><td class="f">dispatch.rs</td><td class="n">363</td><td><code>find</code>, <code>resolve_mode</code>, env scrubbing. Pure functions, so the activation-mode truth table is exhaustively testable.</td></tr>
 <tr><td class="f">manifest.rs</td><td class="n">204</td><td><code>AuthorManifest</code> and <code>InstalledState</code>. See the <a href="manifest.html">manifest page</a>.</td></tr>
@@ -254,12 +254,15 @@ two manifests bought a completely untouched SDK.</p>
 trait — the abstraction meant to let FloxHub become a second source without breaking changes —
 was never written, and <code>floxhub.rs</code> was never created. That was a stated <em>v1
 goal</em>, and the port carried the gap forward unchanged rather than closing it.</p>
-<p>Consequence is bounded: <code>state.toml</code> still carries a <code>source</code>
-discriminant, so no data migration will be needed. But adding FloxHub means extracting an
-abstraction from working code rather than filling a prepared slot.</p>
+<p>Consequence is bounded but not free: <code>state.toml</code> records a <code>source</code>
+(a URL or local path) and a <code>kind</code>, so an installed extension's origin is at least
+recoverable. But <code>source</code> is not a clean <code>github</code>-vs-<code>floxhub</code>
+discriminant — it holds the raw URL/path, and <code>kind</code> distinguishes
+script/git/binary/local, not the remote. Adding FloxHub means extracting an abstraction from
+working code rather than filling a prepared slot, and likely a state-shape decision too.</p>
 </div>
 
-<h3>The CLI command surface · 7 files, 1,011 lines</h3>
+<h3>The CLI command surface · 7 files, 1,005 lines</h3>
 
 <p><code>cli/flox/src/commands/extension/</code> — parsing and presentation. This half stayed in
 the <code>flox</code> crate deliberately: it depends on four things <code>beta</code> cannot reach
@@ -272,7 +275,7 @@ and <code>utils::active_environments</code>, the last needed for pinned-mode ide
 <thead><tr><th>File</th><th class="n">Lines</th><th>What it does</th></tr></thead>
 <tbody>
 <tr><td class="f">mod.rs</td><td class="n">350</td><td>The <code>bpaf</code> enum, <code>try_dispatch_external</code>, the <code>execvp</code> call, and the env-var beta check used by dispatch.</td></tr>
-<tr><td class="f">search.rs</td><td class="n">208</td><td>GitHub topic search.</td></tr>
+<tr><td class="f">search.rs</td><td class="n">202</td><td>GitHub topic search.</td></tr>
 <tr><td class="f">upgrade.rs</td><td class="n">162</td><td>Single, <code>--all</code>, and <code>--dry-run</code>.</td></tr>
 <tr><td class="f">format.rs</td><td class="n">144</td><td>Shared table rendering.</td></tr>
 <tr><td class="f">install.rs</td><td class="n">90</td><td><code>--pin</code>, <code>--force</code>, <code>--from-path</code>.</td></tr>
@@ -493,7 +496,7 @@ two directories and four files, revert seven small edits. Nothing was refactored
 <h4>What it does not prove</h4>
 <p>A small diff is not a safe diff. The six lines in <code>main.rs</code> execute on every failed
 parse for every user. Line count measures <em>reviewability</em>, not risk — those six deserve more
-scrutiny per line than the 2,432-line <code>manager.rs</code>, which cannot run unless someone
+scrutiny per line than the 2,429-line <code>manager.rs</code>, which cannot run unless someone
 invokes it.</p>
 </div>
 </div>

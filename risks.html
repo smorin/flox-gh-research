@@ -181,15 +181,18 @@ lets the extension carry its environment.</p>
   </div>
   <div class="card card-outlined">
     <h4>An external contract</h4>
-    <p>Once third parties publish extensions, <code>flox-extension.toml</code> and the four
-    <code>FLOX_EXTENSION_*</code> variables become a compatibility surface. Changing them breaks
-    other people's software.</p>
+    <p>Once third parties publish extensions, <code>flox-extension.toml</code> and the injected
+    variables (<code>FLOX_EXTENSION_NAME</code>, <code>_VERSION</code>, <code>_PATH</code>, and
+    <code>FLOX_BIN</code>) become a compatibility surface. Changing them breaks other people's
+    software.</p>
   </div>
   <div class="card card-outlined">
     <h4>A GitHub dependency</h4>
-    <p>Install and upgrade require reaching <code>api.github.com</code>. Rate limits, outages, and
-    API changes become flox's problem. The <code>ExtensionSource</code> abstraction anticipates
-    this but only has one implementation.</p>
+    <p>GitHub install and upgrade require reaching <code>api.github.com</code>; rate limits,
+    outages, and API changes become flox's problem. (Local <code>--from-path</code> install and
+    upgrade are entirely offline.) There is no <code>ExtensionSource</code> abstraction to swap the
+    backend — <code>source.rs</code> is a one-line stub and <code>GitHubSource</code> is a concrete
+    type — so a second source means new code, not a new impl.</p>
   </div>
 </div>
 
@@ -199,14 +202,15 @@ lets the extension carry its environment.</p>
 in install, list, remove, upgrade, or search affects only people who invoke those commands.</p>
 
 <div class="callout">
-<p><strong>The exception is the two-phase parse.</strong> The dispatch fallback runs on
-<em>every</em> failed parse of <em>every</em> flox invocation. A bug there — a panic, a hang, a
-swallowed error message — would surface as a broken experience for anyone who mistypes any flox
-command, whether or not they have ever installed an extension.</p>
-<p>The mitigation in the current design is that the fallback is narrow: it fires only when the
-parse already failed and the first token does not begin with <code>-</code>, and on no match it
-prints the original parse error as though it had never run. That narrowness is the safety
-property, and it is worth protecting in review.</p>
+<p><strong>The exception is the two-phase parse.</strong> The dispatch hook runs on every failed
+parse — but it returns immediately unless <code>FLOX_FEATURES_BETA</code> is set, so while
+extensions stay in beta a bug there can only affect users who opted in. A panic or hang in the
+enabled path would still surface for any beta user who mistypes a command, whether or not they have
+installed an extension.</p>
+<p>The mitigation is that the hook is narrow: it exits early when beta is off, and on no match it
+prints the original parse error as though it never ran. Note it does <em>not</em> require the first
+token to be a non-flag — it skips leading flags and dispatches on the first non-flag token, so
+<code>flox -v myext</code> reaches it. That widening is worth watching in review.</p>
 </div>
 
 <h2>Risks accepted deliberately</h2>
@@ -265,7 +269,7 @@ commit after it is a fix, and several are security fixes.</p>
 <tr><td class="sha">a28190031</td><td><em>GA flag-flip, user/author docs, gh-parity smoke tests</em></td><td><span class="badge badge-done">v1 declared here</span></td></tr>
 <tr><td class="sha">23dc96c25</td><td>Block tar-slip and zip-slip on archive extraction</td><td>A malicious archive containing <code>../../.bashrc</code> could write outside the install directory. This is the classic archive-extraction vulnerability, and it was live at GA.</td></tr>
 <tr><td class="sha">166b76583</td><td>Reject off-allowlist GitHub asset download URLs</td><td>A release-asset URL is API-supplied data. Without an allowlist, a crafted API response could redirect the downloader anywhere.</td></tr>
-<tr><td class="sha">f692e3016</td><td>Verify advertised sha256 of the binary asset</td><td>Upgrades the design document's "recorded but not verified" to actually verified against what GitHub advertises. Detects transit corruption; not a provenance guarantee.</td></tr>
+<tr><td class="sha">f692e3016</td><td>Verify the download against the manifest's <code>sha256</code></td><td>The author records <code>[extension.binary].sha256</code>; install compares the download's hash against it and aborts on mismatch. There is no GitHub-advertised digest. Detects a corrupted or swapped download against the author's value; not a provenance guarantee.</td></tr>
 <tr><td class="sha">f3b0167fb</td><td>Lock before reading state; atomic <code>state.toml</code> rewrite</td><td>A read racing a concurrent write could observe a half-written state file.</td></tr>
 <tr><td class="sha">7ac253327</td><td>Gate subcommand handlers on <code>FLOX_FEATURES_EXTENSIONS</code></td><td>The opt-out did not fully disable the subcommand family, so the escape hatch was incomplete.</td></tr>
 <tr><td class="sha">99d0af265</td><td>Classify HTTP 401, 403, and 429 uniformly</td><td>Rate limiting and auth failure previously surfaced inconsistently depending on which call hit them.</td></tr>

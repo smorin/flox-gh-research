@@ -225,28 +225,24 @@ degrading error messages for ordinary typos.</p>
 <p>What shipped instead: parse normally, and only on failure ask whether the failure looks like an
 extension invocation.</p>
 
-<div class="filebar"><span>the shape of the fallback in main.rs</span></div>
-<pre class="code">match commands::flox_cli().run_inner(args) {
-    Ok(cmd)  =&gt; run(cmd),
-
-    //  Parse failed. If the first positional is not a flag, this may be
-    //  `flox &lt;extension&gt; …` rather than a typo — try dispatch before
-    //  printing the parser's error.
-    Err(ParseFailure::Stderr(_)) if looks_like_extension(&amp;args) =&gt; {
-        match try_dispatch_external(args) {
-            Some(code) =&gt; code,        // dispatched; never returns on success
-            None       =&gt; print_original_parse_error(),
-        }
+<div class="filebar"><span>the fallback in main.rs, on parse failure</span></div>
+<pre class="code">bpaf::ParseFailure::Stderr(m) =&gt; {
+    //  Parse failed. Try extension dispatch first; a miss falls
+    //  through to the unchanged error below.
+    if let Some(exit) = commands::extension::try_dispatch_external() {
+        return exit;              // dispatched (execvp never returns on success)
     }
-
-    Err(err) =&gt; { err.print_message(80); ExitCode::from(2) }
+    message::error(format!("{m:80}"));
+    return ExitCode::from(1);
 }</pre>
 
 <p>The ordering is the whole point. Built-in parsing is attempted first and its error messages are
 preserved verbatim, so a user who types <code>flox instal</code> still gets the parser's
-suggestion rather than "no extension named instal". Dispatch only runs when the parse already
-failed <em>and</em> the first token does not begin with <code>-</code>, and if no extension
-matches, the original parse error is printed as though the fallback never ran.</p>
+suggestion rather than "no extension named instal". <code>try_dispatch_external</code> itself
+returns <code>None</code> immediately unless <code>FLOX_FEATURES_BETA</code> is set, then
+<em>skips any leading flags</em> and takes the first non-flag token as the name — so
+<code>flox -v myext</code> can dispatch, not only a bare first positional. On a miss, the original
+parse error prints and the process exits <code>1</code>.</p>
 
 <h2>Dispatch, end to end</h2>
 
@@ -257,18 +253,21 @@ matches, the original parse error is printed as though the fallback never ran.</
 bpaf parse ──── recognized? ──yes──▶ ordinary command path
       │ no
       ▼
-first token starts with '-' ? ──yes──▶ print parse error, exit 2
-      │ no
+FLOX_FEATURES_BETA set ? ──no──▶ print parse error, exit 1
+      │ yes
+      ▼
+skip leading flags, take first non-flag token as name
+      │
       ▼
 dispatch::find("hello")
       │
       ├─ $FLOX_DATA_DIR/extensions/flox-hello/flox-hello   ← managed, wins
       └─ $PATH                                             ← fallback
       │
-      ├── not found ──▶ print original parse error, exit 2
+      ├── not found ──▶ print original parse error, exit 1
       ▼
-read state.toml + flox-extension.toml from the install dir
-      │
+managed install dir?  ──yes──▶ read state.toml + flox-extension.toml
+      │ no (PATH ext)          (managed only; PATH exts have no metadata)
       ▼
 resolve_mode(manifest.environment)
       │
@@ -361,8 +360,8 @@ their own identity:</p>
 <thead><tr><th>Variable</th><th>Value</th></tr></thead>
 <tbody>
 <tr><td><code>FLOX_EXTENSION_NAME</code></td><td>The extension's declared name.</td></tr>
-<tr><td><code>FLOX_EXTENSION_VERSION</code></td><td>Tag if pinned, else short SHA, else <code>-</code>.</td></tr>
-<tr><td><code>FLOX_EXTENSION_PATH</code></td><td>Absolute path to the install directory.</td></tr>
+<tr><td><code>FLOX_EXTENSION_VERSION</code></td><td>The tag if one is recorded (not gated on <code>--pin</code>), else the 8-char short SHA, else <code>-</code>.</td></tr>
+<tr><td><code>FLOX_EXTENSION_PATH</code></td><td>Absolute path to the install directory for a managed extension; for a <code>$PATH</code>-fallback extension it is the executable path instead.</td></tr>
 <tr><td><code>FLOX_BIN</code></td><td>Path to the flox binary that dispatched it — the analog of <code>gh</code>'s <code>GH_PATH</code>, so extensions can call flox back without <code>$PATH</code> ambiguity.</td></tr>
 </tbody>
 </table>
@@ -388,7 +387,7 @@ environment first.</p>
 <pre class="code">&lt;flox.data_dir&gt;/extensions/
 ├── .lock                       fslock; serializes install/remove/upgrade
 └── flox-&lt;name&gt;/
-    ├── flox-&lt;name&gt;             executable · file, symlink, or inside a clone
+    ├── flox-&lt;name&gt;             executable · a copied file, or inside a clone
     ├── state.toml              InstalledState, written by install
     ├── flox-extension.toml     copy of the author manifest
     └── .git/                   script and git kinds only</pre>
@@ -416,10 +415,12 @@ twice. This is the sort of constraint that is invisible until it deadlocks.</p>
 <p>The user never declares a kind. The installer picks by probing, in this order:</p>
 
 <ol class="numbered">
-<li><strong>Normalize the target.</strong> <code>owner/repo</code>, a full URL, or a local path.
-The repo segment is auto-prefixed with <code>flox-</code> when it does not already start with it,
-so <code>acme/hello</code>, <code>acme/flox-hello</code>, and the full URL all resolve
-identically.</li>
+<li><strong>Parse the target.</strong> The positional spec is either <code>.</code> or exactly
+<code>owner/repo</code> (two non-empty segments — full URLs are rejected); a local path uses
+<code>--from-path</code>. The repo must already begin with <code>flox-</code>
+(<code>extract_extension_name</code> strips that prefix to derive the name) — there is no
+auto-prefixing, so <code>acme/hello</code> is an error; you must pass
+<code>acme/flox-hello</code>.</li>
 <li><strong>Reject conflicts.</strong> A name colliding with a built-in top-level subcommand is
 refused outright against the list in <code>reserved.rs</code>. An already-installed name is refused
 unless <code>--force</code>.</li>
@@ -429,31 +430,33 @@ if archived, <code>chmod +x</code>.</li>
 <li><strong>Otherwise clone.</strong> Script kind: <code>git clone</code> the repo, verify an
 executable <code>flox-&lt;name&gt;</code> exists at the root.</li>
 <li><strong>Or read a local directory.</strong> <code>--from-path</code> skips GitHub entirely and
-symlinks into the working tree.</li>
+<em>copies</em> the executable and manifest out of the directory (<code>fs::copy</code>) into the
+managed install dir.</li>
 </ol>
 
 <h3>Binary asset resolution</h3>
 
-<p>Four strategies tried in order, in <code>github::resolve_asset_for</code>:</p>
+<p>The resolver <code>github::resolve_asset</code> can try up to four strategies, but
+<strong>both production call sites — install and upgrade — invoke it with no manifest</strong>, so
+in practice only two run:</p>
 
 <div class="scroll-x">
 <table class="tbl">
-<thead><tr><th>#</th><th>Strategy</th><th>Detail</th></tr></thead>
+<thead><tr><th>#</th><th>Strategy</th><th>Runs in production?</th><th>Detail</th></tr></thead>
 <tbody>
-<tr><td>1</td><td>Explicit platform map</td><td><span class="badge badge-draft">reserved, not implemented</span> The code comment marks this slot for a future <code>BinaryMeta.platforms</code>.</td></tr>
-<tr><td>2</td><td>Manifest template, exact match</td><td><code>[extension.binary].asset</code> rendered with <code>{name}</code>, <code>{os}</code>, <code>{arch}</code>, <code>{ext}</code>, then matched by exact asset name.</td></tr>
-<tr><td>3</td><td>Substring match</td><td>Against platform tokens for the host — e.g. Apple Silicon tries <code>darwin-aarch64</code>, <code>darwin-arm64</code>, <code>macos-aarch64</code>, <code>macos-arm64</code>.</td></tr>
-<tr><td>4</td><td>Rosetta fallback</td><td>On Apple Silicon with no arm64 match, retry the x86_64 matchers and log a <code>tracing::info!</code> line noting the fallback.</td></tr>
+<tr><td>1</td><td>Explicit platform map</td><td><span class="badge badge-draft">never</span></td><td>A reserved code-comment slot for a future <code>BinaryMeta.platforms</code>; unimplemented.</td></tr>
+<tr><td>2</td><td>Manifest template, exact match</td><td><span class="risk risk-attn">never</span></td><td>Implemented — renders <code>[extension.binary].asset</code> — but install/upgrade pass <code>None</code> as the manifest, so it is dead code in the install path.</td></tr>
+<tr><td>3</td><td>Substring match</td><td><span class="risk risk-safe">yes</span></td><td>The actual selector. Platform tokens matched against asset names — Apple Silicon tries <code>darwin-aarch64</code>, <code>darwin-arm64</code>, <code>macos-aarch64</code>, <code>macos-arm64</code>.</td></tr>
+<tr><td>4</td><td>Rosetta fallback</td><td><span class="risk risk-safe">yes</span></td><td>On Apple Silicon with no arm64 match, retry the x86_64 tokens and log a <code>tracing::info!</code>.</td></tr>
 </tbody>
 </table>
 </div>
 
-<p>Strategy 2 contains a documentation error that strategy 3 conceals. <code>{os}</code> is
-substituted with Rust's raw <code>std::env::consts::OS</code>, which on macOS is
-<code>"macos"</code> — but the author guide tells authors it renders <code>"darwin"</code>. An
-author who follows the guide ships <code>darwin</code>-named assets, fails the exact match, and
-falls through to substring matching, which accepts both. It works, for the wrong reason. Full
-detail on the <a href="manifest.html">manifest page</a>.</p>
+<p>The consequence: the author-facing <code>asset</code> template does nothing, and the
+much-discussed <code>{os}</code>=<code>macos</code>-not-<code>darwin</code> rendering is moot — no
+template is rendered during a real install. Selection is substring-only, and the matchers accept
+both <code>darwin</code> and <code>macos</code>. This reads as a wiring bug (install should pass the
+manifest); flagged for the code review. Detail on the <a href="manifest.html">manifest page</a>.</p>
 
 <h3>Upgrade, per kind</h3>
 
@@ -463,8 +466,9 @@ up-to-date, otherwise re-run the install flow into a staging directory and renam
 <li><strong>Script and git</strong> — fetch the tracked ref and reset hard to it, recording the new
 commit SHA in <code>state.toml</code>. <code>state.toml</code> carries a <code>branch</code> field
 for exactly this: the default branch observed at install time, so upgrade knows what to fetch.</li>
-<li><strong>Local</strong> — refuses. The install is a symlink into a working tree; there is
-nothing to upgrade, and saying so is better than pretending.</li>
+<li><strong>Local</strong> — refuses. A local install is a one-time copy from the source
+directory, with no remote to re-fetch; there is nothing to upgrade, and saying so is better than
+pretending.</li>
 <li><strong>Pinned anything</strong> — skipped with a notice unless <code>--force</code>.</li>
 </ul>
 
@@ -497,11 +501,11 @@ five are hidden from <code>flox --help</code> and refuse to run unless beta is e
 </table>
 </div>
 
-<p>Two environment variables extend reach without adding CLI surface.
-<code>FLOX_EXTENSIONS_GITHUB_BASE_URL</code> and <code>FLOX_EXTENSIONS_GITHUB_CLONE_HOST</code>
-together point the subsystem at a GitHub Enterprise host — the first for metadata, the second for
-assembling clone URLs. They double as the test seam: the unit suite points them at an
-<code>httpmock</code> server.</p>
+<p>One environment variable exists as a test seam, not a feature.
+<code>FLOX_EXTENSIONS_GITHUB_BASE_URL</code> points the API client at a mock server for the
+integration tests; it is documented in-code as test-only. It does <em>not</em> redirect
+<code>git clone</code>, whose host is hardcoded to <code>https://github.com</code>. There is no
+<code>FLOX_EXTENSIONS_GITHUB_CLONE_HOST</code> and no GitHub Enterprise support.</p>
 
 <h2>Testing</h2>
 

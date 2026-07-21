@@ -218,9 +218,9 @@ stated so reviewers can see them rather than discover them:</p>
 </div>
 
 <p>Two of these did not survive contact with implementation, and both moved in the safer direction.
-<code>search</code> shipped anyway, as <code>P08</code>. And the "recorded but not verified"
-checksum became verified — commit <code>f692e3016</code>, <em>verify advertised sha256 of binary
-asset</em>, landed during hardening. See the <a href="risks.html">risks page</a> for the full
+<code>search</code> shipped anyway, as <code>P08</code>. And the checksum non-goal partly
+reversed — commit <code>f692e3016</code> added verification of the author manifest's own
+<code>sha256</code> against the download (not a GitHub-advertised digest, which does not exist). See the <a href="risks.html">risks page</a> for the full
 sequence.</p>
 
 <h2>Part two — the five primitives kept and the one thing changed</h2>
@@ -247,6 +247,15 @@ user intent rather than ambient shell state.</li>
 <code>installBin</code> algorithm reproduced literally, including the Apple Silicon to x86_64
 Rosetta fallback, plus an author-supplied template on top.</li>
 </ol>
+
+<div class="callout">
+<p><strong>Two of these five are what the document proposed, not what the code did.</strong>
+There is no <code>ExtensionManager</code> trait or struct — install, list, remove, and upgrade are
+free functions in <code>manager.rs</code>, and lookup is <code>dispatch::find</code>; the
+"same name" was not kept. And the author-supplied asset template is implemented in the resolver but
+never invoked by <code>install</code>/<code>upgrade</code> (they pass no manifest), so selection is
+substring-matching only — the "override on top" does not run. The other three primitives hold.</p>
+</div>
 
 <h3>The one deliberate divergence</h3>
 
@@ -370,8 +379,8 @@ status, which is the useful part:</p>
 <table class="tbl">
 <thead><tr><th>Open question</th><th>Where it landed</th></tr></thead>
 <tbody>
-<tr><td>Windows support, or macOS and Linux only</td><td><span class="risk risk-look">still open</span> No Windows path was built; <code>{ext}</code> renders <code>zip</code> on Windows and the matchers have no Windows tokens.</td></tr>
-<tr><td>Keeping the reserved-name list in sync with <code>Commands</code></td><td><span class="risk risk-safe">resolved</span> Built as proposed — <code>extension_drift_tests</code> in <code>commands/mod.rs</code> scrapes <code>flox --help</code> and asserts every visible command is in the list. Hidden commands are still listed by hand.</td></tr>
+<tr><td>Windows support, or macOS and Linux only</td><td><span class="risk risk-look">still open</span> Partial plumbing exists — the platform matchers include a <code>windows</code> token and <code>{ext}</code> renders <code>zip</code> — but Windows is not tested or supported end to end.</td></tr>
+<tr><td>Keeping the reserved-name list in sync with <code>Commands</code></td><td><span class="risk risk-safe">resolved</span> Guarded by a bats test in <code>cli/tests/extension.bats</code> that walks every visible <code>flox --help</code> command and asserts the installer refuses it. (There is no Rust <code>extension_drift_tests</code> module.) Hidden commands are still listed by hand.</td></tr>
 <tr><td>Git transport — <code>git2</code>, <code>gix</code>, or shell out</td><td><span class="risk risk-safe">resolved</span> Reuses the existing <code>GitCommandProvider</code>, with one-off operations shelled out directly.</td></tr>
 <tr><td>Archive formats — support from day one or defer</td><td><span class="risk risk-safe">resolved</span> Supported, in <code>archive.rs</code>, with traversal protection added later.</td></tr>
 <tr><td>What a FloxHub extension fetch primitive would be</td><td><span class="risk risk-look">still open</span> <code>P09</code>, not started.</td></tr>

@@ -318,11 +318,11 @@ description = "Canonical binary-kind reference extension for flox"
 source = "github-release"
 asset = "flox-hello-binary-{os}-{arch}.tar.gz"</pre>
 
-<p>This is the manifest the <a href="manifest.html">manifest page</a> discusses: the
-<code>asset</code> template renders <code>{os}</code> as <code>macos</code> on macOS, which is why
-the workflow below produces <code>flox-hello-binary-macos-aarch64.tar.gz</code> and not
-<code>...-darwin-...</code> as the author guide would lead you to write. The example is right; the
-guide is wrong.</p>
+<p>The <code>asset</code> template here is inert: <code>install</code> selects the binary by
+substring-matching platform tokens against the release's asset names and never consults the
+manifest template (see the <a href="manifest.html">manifest page</a>). The workflow below names its
+assets <code>flox-hello-binary-macos-aarch64.tar.gz</code>, and the <code>macos</code> token is
+what the substring matcher finds — the template's <code>{os}</code> rendering plays no part.</p>
 
 <h3>The release workflow</h3>
 
@@ -406,7 +406,7 @@ gets installed.</p>
 <pre class="code">git clone https://github.com/flox/flox-hello-local
 cd flox-hello-local
 
-flox extension install --from-path .      # symlinks into this working tree
+flox extension install --from-path .      # copies out of this working tree
 flox hello-local world
 # Hello from hello-local v&lt;commit&gt;
 # args: world
@@ -422,18 +422,18 @@ from the directory basename by stripping a leading <code>flox-</code>.</p>
 
 <h3>Why upgrade refuses, and why that is right</h3>
 
-<p>A local install symlinks <code>~/.local/share/flox/extensions/flox-hello-local/flox-hello-local</code>
-to the file in your working tree. There is no remote to compare against and no version to advance
-to — <code>upgrade</code> would be meaningless. Rather than silently succeed, it refuses and says
-so.</p>
+<p>A local install <em>copies</em> the executable and manifest out of your working tree into
+<code>~/.local/share/flox/extensions/flox-hello-local/</code> (<code>fs::copy</code>). There is no
+remote to compare against and no version to advance to — <code>upgrade</code> would be meaningless.
+Rather than silently succeed, it refuses and says so.</p>
 
 <div class="callout">
-<p><strong>The symlink is the whole trick, and it has one sharp edge.</strong> Because the
-executable is a symlink, edits to a <em>script</em> take effect immediately — the next
-<code>flox hello-local</code> reads the new bytes with no reinstall. But the manifest is
-<em>copied</em>, not symlinked, deliberately so that a half-edited TOML file cannot corrupt install
-state. So editing the script needs no reinstall, and editing the manifest does. The README's
-<code>--force</code> loop covers both cases, which is why it is written that way.</p>
+<p><strong>It is a copy, not a symlink — so edits do not take effect until you reinstall.</strong>
+Because <code>--from-path</code> copies the files into the managed directory, editing the script in
+your working tree changes nothing until you re-run
+<code>flox extension install --from-path . --force</code>. That is exactly why the reference
+README's dev loop uses <code>--force</code> after every edit. (An earlier draft of these pages
+claimed the executable was symlinked and edits were live; that was wrong.)</p>
 </div>
 
 <h2>Which one should you write?</h2>
