@@ -138,402 +138,314 @@ footer.pagefoot { border-top: 1px solid var(--gray-300); margin-top: var(--sp-8)
   <a href="examples.html">Examples</a>
   <a href="risks.html">Risks</a>
 </div></nav>
-
 <div class="wrap">
 
-<div class="kicker">Branch diff · smorin/github-extension-prototype vs origin/main</div>
+<div class="kicker">Branch diff · smorin/github-extension-prototype-v2 vs origin/main</div>
 <h1>Every file <span class="accent">touched</span></h1>
 
-<p class="lede">Thirty-three files across 59 commits. Twenty-three are new and self-contained; ten
-already existed. This page walks all of them — but the ten are the ones that matter, because they
-are the entire surface on which this work can break anything else.</p>
+<p class="lede">Thirty-one files. Twenty-three are new and self-contained; eight already existed —
+and of those eight, only three are hand-written source in the crate that carries review weight.
+This page walks all of them.</p>
+
+<div class="callout">
+<p><strong>Two branches exist.</strong> This page describes
+<code>smorin/github-extension-prototype-v2</code>, the current one, rebased onto July's
+<code>main</code> and gated behind the pre-existing <code>features.beta</code> flag. Its
+predecessor <code>smorin/github-extension-prototype</code> was based on April's <code>main</code>
+and added its own always-on feature flag. Where the two differ instructively, both are shown.</p>
+</div>
 
 <h2>The measurement</h2>
 
-<p>Everything below is measured against <code>0badcdf59</code>, the merge-base with
-<code>origin/main</code> — <em>feat: version the catalog config/manifest and lockfile (#4164)</em>,
-dated 2026-04-15. Reproduce it with:</p>
+<p>Measured against <code>dd390e66b</code> — the tip of <code>origin/main</code> on 2026-07-21,
+which is also the branch point. Reproduce with:</p>
 
 <div class="filebar"><span>reproduce this page</span></div>
-<pre class="code">git merge-base HEAD origin/main         # 0badcdf594eefee482c49fa6594be50f7e5a51b2
-git diff --name-status 0badcdf59..HEAD
-git diff --shortstat  0badcdf59..HEAD   # 33 files changed, 10643 insertions(+), 51 deletions(-)</pre>
+<pre class="code">git diff --name-status origin/main
+git diff --shortstat  origin/main   # 31 files changed, 10854 insertions(+), 4 deletions(-)</pre>
 
 <div class="stats">
-  <div class="stat"><div class="v">33</div><div class="k">Files changed</div><div class="d">59 commits</div></div>
-  <div class="stat"><div class="v">23</div><div class="k">New files</div><div class="d">+10,392</div></div>
-  <div class="stat"><div class="v">7</div><div class="k">Deliberate edits</div><div class="d">+127 / −3</div></div>
-  <div class="stat"><div class="v">3</div><div class="k">Lines removed</div><div class="d">from hand-written code</div></div>
+  <div class="stat"><div class="v">31</div><div class="k">Files changed</div><div class="d">+10,854 / −4</div></div>
+  <div class="stat"><div class="v">23</div><div class="k">New files</div><div class="d">+10,730</div></div>
+  <div class="stat"><div class="v">3</div><div class="k">Edited source files</div><div class="d">in the reviewed crate</div></div>
+  <div class="stat"><div class="v">0</div><div class="k">Lines deleted</div><div class="d">from hand-written code</div></div>
 </div>
 
-<h3>How the 33 break down</h3>
+<h3>How the 31 break down</h3>
 
 <div class="scroll-x">
 <table class="tbl">
 <thead><tr><th>Group</th><th class="n">Files</th><th class="n">+</th><th class="n">−</th><th>What it is</th></tr></thead>
 <tbody>
-<tr>
-  <td><strong>New and isolated</strong></td><td class="n">23</td><td class="n">10,392</td><td class="n">0</td>
-  <td>Entirely new files in new directories. Deleting them returns flox to stock behavior.</td>
-</tr>
-<tr>
-  <td><strong>Deliberate wiring</strong></td><td class="n">7</td><td class="n">127</td><td class="n">3</td>
-  <td>Pre-existing files edited on purpose to connect the new code. The real blast radius.</td>
-</tr>
-<tr>
-  <td>Workflow hygiene</td><td class="n">1</td><td class="n">1</td><td class="n">0</td>
-  <td><code>.gitignore</code> — unrelated to extensions.</td>
-</tr>
-<tr>
-  <td>Build artifacts</td><td class="n">2</td><td class="n">123</td><td class="n">48</td>
-  <td><code>Cargo.lock</code> and a generated API client. Not authored; see <a href="#incidental">below</a>.</td>
-</tr>
-<tr>
-  <td><strong>Total</strong></td><td class="n">33</td><td class="n">10,643</td><td class="n">51</td><td></td>
-</tr>
+<tr><td><strong>New and isolated</strong></td><td class="n">23</td><td class="n">10,730</td><td class="n">0</td>
+  <td>New files in new directories. Deleting them returns flox to stock behavior.</td></tr>
+<tr><td><strong>Deliberate wiring</strong></td><td class="n">7</td><td class="n">44</td><td class="n">0</td>
+  <td>Pre-existing files edited on purpose. The real blast radius.</td></tr>
+<tr><td>Build artifact</td><td class="n">1</td><td class="n">80</td><td class="n">4</td>
+  <td><code>Cargo.lock</code>. Not authored.</td></tr>
+<tr><td><strong>Total</strong></td><td class="n">31</td><td class="n">10,854</td><td class="n">4</td><td></td></tr>
 </tbody>
 </table>
 </div>
 
 <div class="callout">
-<p><strong>The single most useful number on this page: three.</strong> Across the entire branch,
-three lines of hand-written pre-existing flox code were removed — two dependency lines in a
-<code>Cargo.toml</code> and one <code>derive</code> attribute. The other 48 deletions are in a
-lockfile and a generated client.</p>
-<p>The <em>purely additive</em> claim in <code>PROJECTS.md</code> is not an aspiration. It is
-measurable, and it holds.</p>
+<p><strong>Every one of the four deleted lines is in <code>Cargo.lock</code>.</strong> Across the
+entire branch, not a single line of hand-written pre-existing flox code was removed. The
+<em>purely additive</em> claim is not an aspiration; it is measurable, and it holds more strictly
+than it did in v1, which removed three.</p>
+</div>
+
+<h2>What the rebase changed</h2>
+
+<p>The port had two goals: move onto current <code>main</code>, and stop introducing a bespoke
+feature flag. The second turned out to shrink the footprint far more than expected, because
+<code>main</code> had meanwhile grown both a <code>features.beta</code> flag and a
+<code>beta</code> crate whose code is explicitly exempt from stability review.</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th></th><th>v1 (April base)</th><th>v2 (July base)</th></tr></thead>
+<tbody>
+<tr><td class="f">Gating</td><td>new <code>Features::extensions</code>, default <strong>on</strong>, env opt-out</td><td>existing <code>features.beta</code>, default <strong>off</strong>, opt-in</td></tr>
+<tr><td class="f">Visible in <code>flox --help</code></td><td>yes</td><td>no — <code>hide</code></td></tr>
+<tr><td class="f">Domain module lives in</td><td><code>flox-rust-sdk/src/providers/extensions/</code></td><td><code>cli/beta/src/extensions/</code></td></tr>
+<tr><td class="f">Changes to <code>flox-rust-sdk</code></td><td>3 files, +33 / −3</td><td><span class="risk risk-safe">none</span></td></tr>
+<tr><td class="f">Lines in reviewed <code>flox</code> crate</td><td>+127 / −3</td><td>+15 / −0</td></tr>
+<tr><td class="f">Per-handler feature gates</td><td>5</td><td>0 — gated once in <code>Commands::Beta</code></td></tr>
+<tr><td class="f">Hand-written deletions</td><td>3</td><td>0</td></tr>
+</tbody>
+</table>
 </div>
 
 <h2>New and isolated · 23 files</h2>
 
-<p>These live in directories that did not previously exist. No pre-existing file's behavior depends
-on them except through the seven wiring edits in the next section.</p>
+<h3>The beta-crate domain module · 10 files, 5,500 lines</h3>
 
-<h3>The SDK provider module · 10 files, 5,491 lines</h3>
+<p><code>cli/beta/src/extensions/</code> — all domain logic. It lives here rather than in
+<code>flox-rust-sdk</code> on the instruction of the repo's own
+<code>adding-beta-subcommand</code> skill, which states that changes outside <code>cli/beta</code>
+"require more thorough review which will make it slower to add the beta command."</p>
 
-<p><code>cli/flox-rust-sdk/src/providers/extensions/</code> — all domain logic, testable without a
-parser context. This placement follows the pattern flox already uses for catalog, git, and build
-providers, and mirrors <code>gh</code> keeping <code>pkg/extensions/</code> separate from its
-command surface.</p>
+<p>Relocating it cost almost nothing: across 5,500 lines the module had only <em>three</em>
+<code>crate::</code> imports — <code>Flox</code> twice and the git provider once — both public
+<code>flox-rust-sdk</code> API. Rewriting three import lines and moving six dependencies between
+two manifests bought a completely untouched SDK.</p>
 
 <div class="scroll-x">
 <table class="tbl">
 <thead><tr><th>File</th><th class="n">Lines</th><th>What it does · why it exists</th></tr></thead>
 <tbody>
-<tr><td class="f">manager.rs</td><td class="n">2,432</td><td>The orchestrator — install, list, remove, upgrade, and the lock discipline. The single entry point for anything that mutates the extensions directory, which is what makes the locking auditable.</td></tr>
-<tr><td class="f">github.rs</td><td class="n">1,804</td><td>REST calls, clone invocation, asset resolution, topic search. Isolated so the GitHub API surface has exactly one home and one test seam.</td></tr>
-<tr><td class="f">archive.rs</td><td class="n">497</td><td>tar and zip extraction with traversal guards. Separate from <code>github.rs</code> because extraction is a security boundary and deserves its own tests.</td></tr>
-<tr><td class="f">dispatch.rs</td><td class="n">363</td><td><code>find</code>, <code>resolve_mode</code>, and env scrubbing. Pure functions where possible so the activation-mode truth table is exhaustively testable.</td></tr>
-<tr><td class="f">manifest.rs</td><td class="n">204</td><td><code>AuthorManifest</code> and <code>InstalledState</code> serde types. See the <a href="manifest.html">manifest page</a>.</td></tr>
-<tr><td class="f">layout.rs</td><td class="n">63</td><td>Four functions composing XDG paths. Trivial by design — every path in the subsystem derives from here.</td></tr>
-<tr><td class="f">mod.rs</td><td class="n">61</td><td>Public re-exports. The crate's whole extension API surface is visible in one screen.</td></tr>
-<tr><td class="f">reserved.rs</td><td class="n">55</td><td><code>RESERVED_COMMAND_NAMES</code> — built-in names an extension may not claim. Kept honest by a drift test in <code>commands/mod.rs</code>.</td></tr>
+<tr><td class="f">manager.rs</td><td class="n">2,432</td><td>The orchestrator — install, list, remove, upgrade, and the lock discipline. Sole mutator of the extensions directory, which is what makes locking auditable.</td></tr>
+<tr><td class="f">github.rs</td><td class="n">1,804</td><td>REST calls, clone invocation, asset resolution, topic search. One home for the GitHub API surface, one test seam.</td></tr>
+<tr><td class="f">archive.rs</td><td class="n">497</td><td>tar and zip extraction with traversal guards. Separate because extraction is a security boundary.</td></tr>
+<tr><td class="f">dispatch.rs</td><td class="n">363</td><td><code>find</code>, <code>resolve_mode</code>, env scrubbing. Pure functions, so the activation-mode truth table is exhaustively testable.</td></tr>
+<tr><td class="f">manifest.rs</td><td class="n">204</td><td><code>AuthorManifest</code> and <code>InstalledState</code>. See the <a href="manifest.html">manifest page</a>.</td></tr>
+<tr><td class="f">layout.rs</td><td class="n">63</td><td>Four functions composing XDG paths.</td></tr>
+<tr><td class="f">mod.rs</td><td class="n">63</td><td>Public re-exports — the whole crate-facing API in one screen.</td></tr>
+<tr><td class="f">reserved.rs</td><td class="n">61</td><td>Names an extension may not claim. Now guarded by a bats drift test, and corrected during this port — see <a href="risks.html">risks</a>.</td></tr>
 <tr><td class="f">extension.rs</td><td class="n">12</td><td>Shared types.</td></tr>
-<tr><td class="f">source.rs</td><td class="n">1</td><td><span class="risk risk-attn">stub only</span> A single doc comment. See below.</td></tr>
+<tr><td class="f">source.rs</td><td class="n">1</td><td><span class="risk risk-attn">stub only</span> A single doc comment, carried across from v1 unchanged.</td></tr>
 </tbody>
 </table>
 </div>
 
 <div class="callout">
-<p><strong><code>source.rs</code> is one line: <code>//! `ExtensionSource` trait — stub for
-P03.</code></strong> The trait was never written, and <code>floxhub.rs</code> was never created at
-all.</p>
-<p>This matters because abstracting the source was a stated v1 <em>goal</em>, not a v2 item — the
-design document listed <em>"abstract the source of an extension so FloxHub can be added in v2
-without breaking changes"</em> alongside install, list, and dispatch. In the shipped code, GitHub
-logic lives directly in <code>github.rs</code> and <code>manager.rs</code> with no trait boundary
-between them.</p>
-<p>The consequence is bounded rather than alarming: <code>state.toml</code> still carries a
-<code>source</code> discriminant, so no data migration will be needed. But adding FloxHub in
-<code>P09</code> means extracting an abstraction from working code rather than filling in a slot
-that was left for it — which is the more expensive of the two, and the one this goal existed to
-avoid.</p>
+<p><strong><code>source.rs</code> is still one line.</strong> The <code>ExtensionSource</code>
+trait — the abstraction meant to let FloxHub become a second source without breaking changes —
+was never written, and <code>floxhub.rs</code> was never created. That was a stated <em>v1
+goal</em>, and the port carried the gap forward unchanged rather than closing it.</p>
+<p>Consequence is bounded: <code>state.toml</code> still carries a <code>source</code>
+discriminant, so no data migration will be needed. But adding FloxHub means extracting an
+abstraction from working code rather than filling a prepared slot.</p>
 </div>
 
-<h3>The CLI command module · 7 files, 1,007 lines</h3>
+<h3>The CLI command surface · 7 files, 1,011 lines</h3>
 
-<p><code>cli/flox/src/commands/extension/</code> — parsing and presentation only. Thin on purpose;
-anything with logic belongs in the SDK.</p>
+<p><code>cli/flox/src/commands/extension/</code> — parsing and presentation. This half stayed in
+the <code>flox</code> crate deliberately: it depends on four things <code>beta</code> cannot reach
+without a dependency cycle (<code>flox</code> already depends on <code>beta</code>) —
+<code>subcommand_metric!</code>, <code>utils::message</code>, <code>SHELL_COMPLETION_DIR</code>,
+and <code>utils::active_environments</code>, the last needed for pinned-mode idempotency.</p>
 
 <div class="scroll-x">
 <table class="tbl">
-<thead><tr><th>File</th><th class="n">Lines</th><th>What it does · why it exists</th></tr></thead>
+<thead><tr><th>File</th><th class="n">Lines</th><th>What it does</th></tr></thead>
 <tbody>
-<tr><td class="f">mod.rs</td><td class="n">341</td><td>The <code>bpaf</code> enum, <code>try_dispatch_external</code>, the <code>execvp</code> call, and the feature gate. The largest because dispatch lives here — it needs <code>_FLOX_ACTIVE_ENVIRONMENTS</code>, which the SDK deliberately does not parse.</td></tr>
-<tr><td class="f">search.rs</td><td class="n">209</td><td><code>P08</code>, pulled forward from the v2 plan.</td></tr>
-<tr><td class="f">upgrade.rs</td><td class="n">163</td><td>Single, <code>--all</code>, and <code>--dry-run</code> presentation.</td></tr>
-<tr><td class="f">format.rs</td><td class="n">144</td><td>Shared table rendering, so <code>list</code>, <code>upgrade</code>, and <code>search</code> line up.</td></tr>
-<tr><td class="f">install.rs</td><td class="n">91</td><td>Argument handling for <code>--pin</code>, <code>--force</code>, <code>--from-path</code>.</td></tr>
-<tr><td class="f">list.rs</td><td class="n">32</td><td>Thin — the work is in the SDK.</td></tr>
-<tr><td class="f">remove.rs</td><td class="n">27</td><td>Thinnest of all, as it should be.</td></tr>
+<tr><td class="f">mod.rs</td><td class="n">350</td><td>The <code>bpaf</code> enum, <code>try_dispatch_external</code>, the <code>execvp</code> call, and the env-var beta check used by dispatch.</td></tr>
+<tr><td class="f">search.rs</td><td class="n">208</td><td>GitHub topic search.</td></tr>
+<tr><td class="f">upgrade.rs</td><td class="n">162</td><td>Single, <code>--all</code>, and <code>--dry-run</code>.</td></tr>
+<tr><td class="f">format.rs</td><td class="n">144</td><td>Shared table rendering.</td></tr>
+<tr><td class="f">install.rs</td><td class="n">90</td><td><code>--pin</code>, <code>--force</code>, <code>--from-path</code>.</td></tr>
+<tr><td class="f">list.rs</td><td class="n">31</td><td>Thin by design.</td></tr>
+<tr><td class="f">remove.rs</td><td class="n">26</td><td>Thinnest.</td></tr>
 </tbody>
 </table>
 </div>
 
-<h3>Tests, docs, and tracking · 6 files, 3,894 lines</h3>
+<h3>Tests, docs, and tracking · 6 files, 4,219 lines</h3>
 
 <div class="scroll-x">
 <table class="tbl">
-<thead><tr><th>File</th><th class="n">Lines</th><th>What it does · why it exists</th></tr></thead>
+<thead><tr><th>File</th><th class="n">Lines</th><th>What it does</th></tr></thead>
 <tbody>
-<tr><td class="f">cli/tests/extension.bats</td><td class="n">879</td><td>Integration suite. A new file rather than additions to existing bats files, so it can be run alone and cannot destabilize the rest of the suite. <span class="risk risk-look">997 in the working tree</span> — 118 lines are uncommitted.</td></tr>
-<tr><td class="f">PROJECTS.md</td><td class="n">1,366</td><td>The <code>P01</code>–<code>P10</code> tracking doc, including the seven binding design constraints that explain most structural decisions in this table.</td></tr>
-<tr><td class="f">research/gh_extension_flox.md</td><td class="n">1,039</td><td>The design document. Committed to the branch so intent travels with the code.</td></tr>
-<tr><td class="f">docs/extensions/author-guide.md</td><td class="n">300</td><td>Author-facing reference. Contains the <code>{os}</code> error described on the <a href="manifest.html">manifest page</a>.</td></tr>
-<tr><td class="f">docs/extensions/user-guide.md</td><td class="n">298</td><td>User-facing reference.</td></tr>
-<tr><td class="f">docs/extensions/README.md</td><td class="n">11</td><td>Index. Exists so a bats docs-presence test has a stable link target to verify.</td></tr>
+<tr><td class="f">PROJECTS.md</td><td class="n">1,448</td><td>Tracking doc, now including <code>P11</code> for this port.</td></tr>
+<tr><td class="f">cli/tests/extension.bats</td><td class="n">1,066</td><td>27 integration tests, including the reserved-name drift guard added during this port.</td></tr>
+<tr><td class="f">research/gh_extension_flox.md</td><td class="n">1,039</td><td>The design document, unchanged.</td></tr>
+<tr><td class="f">docs/extensions/user-guide.md</td><td class="n">342</td><td>Rewritten for beta gating; examples corrected against real output.</td></tr>
+<tr><td class="f">docs/extensions/author-guide.md</td><td class="n">313</td><td>Placeholder and org defects fixed during this port.</td></tr>
+<tr><td class="f">docs/extensions/README.md</td><td class="n">11</td><td>Index.</td></tr>
 </tbody>
 </table>
 </div>
 
-<h2>Deliberate wiring · 7 pre-existing files</h2>
+<h2>Deliberate wiring · 7 pre-existing files, +44 lines</h2>
 
-<p>This is the section that matters. Everything above could be deleted without flox noticing;
-these seven edits are what make the new code reachable, and they are therefore the only places a
-regression can originate. Each is shown verbatim.</p>
+<p>Everything above could be deleted without flox noticing. These seven edits are what make the new
+code reachable, and therefore the only places a regression can originate.</p>
 
 <div class="entry">
 <h3>cli/flox/src/main.rs</h3>
-<p class="meta">+3 / −0 · the highest-leverage change in the branch</p>
-
-<p>The binary's entry point. Its <code>main</code> runs the <code>bpaf</code> parser and matches on
-the result; the <code>ParseFailure::Stderr</code> arm is what prints "unknown command" errors and
-exits non-zero.</p>
-
-<h4>What changed</h4>
-<p>Three lines inserted at the top of that arm: before printing the error, ask whether the failed
-parse might have been an extension invocation.</p>
-
-<div class="filebar"><span>cli/flox/src/main.rs</span><span>@@ -137,6 +137,9 @@</span></div>
+<p class="meta">+6 / −0 · the highest-leverage change in the branch</p>
+<p>The binary's entry point. The <code>ParseFailure::Stderr</code> arm is what prints "unknown
+command" errors and exits non-zero.</p>
+<div class="filebar"><span>cli/flox/src/main.rs</span></div>
 <pre class="code">             bpaf::ParseFailure::Stderr(m) =&gt; {
+<span class="add">+                // `flox &lt;name&gt;` may be an installed beta extension rather than a</span>
+<span class="add">+                // typo. Only reached once the parse has already failed, and a</span>
+<span class="add">+                // miss falls through to the unchanged error below.</span>
 <span class="add">+                if let Some(exit) = commands::extension::try_dispatch_external() {</span>
 <span class="add">+                    return exit;</span>
 <span class="add">+                }</span>
                  message::error(format!("{m:80}"));
                  return ExitCode::from(1);
              },</pre>
-
 <h4>Impact and architecture</h4>
-<p>Placement is the entire design. Because the hook sits <em>inside the failure arm</em> rather
-than before the parser, the successful path is untouched — no extension code executes on any
-invocation that parses. And because it precedes <code>message::error</code>, a matched extension
-runs instead of the error, while an unmatched one falls through to the identical error flox would
-have printed anyway. <code>try_dispatch_external</code> returning <code>Option</code> is what makes
-that fall-through possible.</p>
+<p>Placement is the whole design. The hook sits <em>inside the failure arm</em>, so no extension
+code runs on any invocation that parses. A miss falls through to the identical error flox would
+have printed anyway, which is what <code>Option</code> buys.</p>
+<p>It is also where residual risk concentrates: these lines run on every failed parse of every
+flox command, for every user, installed extensions or not. That is the entire
+<a href="risks.html">blast radius</a>, and it is six lines wide.</p>
+</div>
 
-<p>It is also where the residual risk concentrates: these three lines run on every failed parse of
-every flox command, for every user, installed extensions or not. That is the
-<a href="risks.html">blast radius</a> in its entirety, and it is three lines wide.</p>
+<div class="entry">
+<h3>cli/flox/src/commands/beta.rs</h3>
+<p class="meta">+8 / −0 · where the command is registered</p>
+<p>Home of the <code>BetaCommands</code> group. Its members are hidden top-level commands, gated
+once in the <code>Commands::Beta</code> arm.</p>
+<div class="filebar"><span>cli/flox/src/commands/beta.rs</span></div>
+<pre class="code"> use flox_rust_sdk::flox::Flox;
+<span class="add">+</span>
+<span class="add">+use crate::commands::extension;</span>
+
+ pub enum BetaCommands {
+     #[bpaf(command("beta-enabled"), hide)]
+     BetaEnabled(...),
+<span class="add">+</span>
+<span class="add">+    /// Manage flox extensions</span>
+<span class="add">+    #[bpaf(command("extension"), hide)]</span>
+<span class="add">+    Extension(#[bpaf(external(extension::extension_commands))] extension::ExtensionCommands),</span>
+ }
+     match self {
+         BetaCommands::BetaEnabled(args) =&gt; args.handle(flox).await,
+<span class="add">+        BetaCommands::Extension(args) =&gt; args.handle(flox).await,</span>
+     }
+     match self {
+         BetaCommands::BetaEnabled(_) =&gt; "beta-enabled",
+<span class="add">+        BetaCommands::Extension(_) =&gt; "extension",</span>
+     }</pre>
+<h4>Impact and architecture</h4>
+<p><code>Beta</code> is a <em>flattening</em> group — the variant on <code>Commands</code> carries
+no <code>command</code> attribute, so its members declare their own. Joining it therefore keeps the
+invocation as <code>flox extension install</code> while hiding it from <code>--help</code>.</p>
+<p><code>hide</code> is required on the variant itself; the enum-level attribute alone is not
+sufficient, and the skill calls this out explicitly. It also replaces five per-handler feature
+checks that v1 needed, because the group gates once before dispatching.</p>
 </div>
 
 <div class="entry">
 <h3>cli/flox/src/commands/mod.rs</h3>
-<p class="meta">+86 / −0 · six lines of wiring, eighty lines of test</p>
-
-<p>Where flox declares its top-level <code>Commands</code> enum, registers command modules, and
-dispatches each variant to its handler. Structurally the most central file in the CLI crate.</p>
-
-<h4>What changed</h4>
-<p>Three separate one-to-four-line insertions to register the subcommand, plus an eighty-line test
-module appended at the end.</p>
-
-<div class="filebar"><span>cli/flox/src/commands/mod.rs</span><span>three insertions</span></div>
-<pre class="code"> mod exit;
+<p class="meta">+1 / −0 · down from +86 in v1</p>
+<div class="filebar"><span>cli/flox/src/commands/mod.rs</span></div>
+<pre class="code"> mod envs;
 <span class="add">+pub mod extension;</span>
- mod gc;
-
-                 Commands::Internal(args) =&gt; args.handle(flox).await,
-<span class="add">+                Commands::Extension(args) =&gt; args.handle(flox).await,</span>
-
-     Internal(#[bpaf(external(internal_commands))] InternalCommands),
-<span class="add">+</span>
-<span class="add">+    /// Manage flox extensions</span>
-<span class="add">+    #[bpaf(command)]</span>
-<span class="add">+    Extension(#[bpaf(external(extension::extension_commands))] extension::ExtensionCommands),</span>
- }</pre>
-
+ mod factory;</pre>
 <h4>Impact and architecture</h4>
-<p>The variant is added at the <em>bottom</em> of the enum, and this is a stated constraint rather
-than a coincidence. <code>PROJECTS.md</code> requires new variants on the top-level enum in
-preference to expanding an existing group enum, on the reasoning that appending to
-<code>Commands</code> touches only the end of a list plus one match arm, whereas adding under a
-group like <code>ManageCommands</code> would mutate a structure belonging to unrelated commands.
-The additive change was chosen because it is the one that cannot disturb anything else.</p>
-
-<p>During the prototype window the variant also carried <code>#[bpaf(hide)]</code>, so builds
-without the feature flag produced byte-identical help output to stock flox. The GA commit removed
-it.</p>
-
-<h4>The other eighty lines</h4>
-<p>An <code>extension_drift_tests</code> module that scrapes <code>flox --help</code> and asserts
-every visible top-level command appears in <code>RESERVED_COMMAND_NAMES</code>. It exists because
-<code>bpaf</code> exposes no programmatic command enumeration, making help-text parsing the only
-mechanism available — a workaround the module documents rather than hides.</p>
-
-<p>Its doc comment also states the shadowing rule outright: <em>a top-level subcommand always
-shadows an extension of the same name.</em> The test keeps the reserved list in sync so
-install-time rejection stays correct; it cannot help with an extension installed <em>before</em>
-flox gains a conflicting command. Discussed on the <a href="risks.html">risks page</a>.</p>
+<p>v1 added 86 lines here: a top-level <code>Commands::Extension</code> variant, a dispatch arm,
+and an 80-line drift-test module. v2 needs one line, because registration moved to
+<code>beta.rs</code> and the drift guard became a bats test. <code>pub</code> rather than private
+because <code>main.rs</code> calls <code>extension::try_dispatch_external()</code>.</p>
 </div>
 
 <div class="entry">
-<h3>cli/flox-rust-sdk/src/flox.rs</h3>
-<p class="meta">+26 / −1 · the feature flag, and the only semantic edit to an existing type</p>
-
-<p>Home of the shared <code>Flox</code> context and the <code>Features</code> struct that carries
-flox's feature flags.</p>
-
-<h4>What changed</h4>
-<p>An <code>extensions</code> field defaulting to <code>true</code>, a hand-written
-<code>Default</code> impl replacing the derive, <code>PartialEq</code> and <code>Eq</code> added,
-and a test pinning the default.</p>
-
-<div class="filebar"><span>cli/flox-rust-sdk/src/flox.rs</span><span>@@ -124,12 +124,28 @@</span></div>
-<pre class="code"><span class="del">-#[derive(Debug, Clone, Copy, Deserialize, Serialize, Default)]</span>
-<span class="add">+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]</span>
- pub struct Features {
-     #[serde(default)]
-     pub upload: bool,
-     #[serde(default)]
-     pub qa: bool,
-<span class="add">+    #[serde(default = "default_true")]</span>
-<span class="add">+    pub extensions: bool,</span>
-<span class="add">+}</span>
-<span class="add">+</span>
-<span class="add">+fn default_true() -&gt; bool {</span>
-<span class="add">+    true</span>
-<span class="add">+}</span>
-<span class="add">+</span>
-<span class="add">+impl Default for Features {</span>
-<span class="add">+    fn default() -&gt; Self {</span>
-<span class="add">+        Self {</span>
-<span class="add">+            upload: false,</span>
-<span class="add">+            qa: false,</span>
-<span class="add">+            extensions: true,</span>
-<span class="add">+        }</span>
-<span class="add">+    }</span>
- }</pre>
-
+<h3>cli/beta/src/lib.rs</h3>
+<p class="meta">+1 / −0</p>
+<div class="filebar"><span>cli/beta/src/lib.rs</span></div>
+<pre class="code"> pub mod beta_enabled;
+<span class="add">+pub mod extensions;</span></pre>
 <h4>Impact and architecture</h4>
-<p>That single deleted line is the most consequential removal in the branch. <code>Default</code>
-had to stop being derived because a derived <code>Default</code> gives every <code>bool</code> the
-value <code>false</code>, and this flag needs to default to <code>true</code>. The explicit impl is
-the cost of a default-on feature.</p>
-
-<p>It changes behavior for the other two flags only in that they are now stated rather than
-inferred — <code>upload</code> and <code>qa</code> remain <code>false</code>. The added
-<code>PartialEq</code>/<code>Eq</code> exists to support the accompanying test, which asserts on
-the whole struct rather than one field. That follows the repo's own convention:
-<em>use <code>assert_eq!</code> on entire structs so failures are easier to debug and new fields
-are caught.</em> A future flag added without updating this test will fail it, which is the
-intent.</p>
-
-<p>The <code>#[serde(default = "default_true")]</code> attribute matters separately: it means an
-existing config file written before this field existed deserializes with extensions
-<em>enabled</em>, rather than silently off.</p>
+<p>One line attaching a 5,500-line module tree. Reverting it makes the whole subsystem dead code
+without touching anything else — which is what "isolated" means concretely.</p>
 </div>
 
 <div class="entry">
-<h3>cli/flox-rust-sdk/src/providers/mod.rs</h3>
-<p class="meta">+1 / −0 · the smallest possible change</p>
+<h3>cli/beta/Cargo.toml</h3>
+<p class="meta">+24 / −0 · the dependencies the SDK no longer carries</p>
+<p>The <code>beta</code> crate previously needed four dependencies. The relocated module needs
+twenty.</p>
+<div class="filebar"><span>cli/beta/Cargo.toml</span><span>additions</span></div>
+<pre class="code"> [dependencies]
+ anyhow.workspace = true
+ bpaf.workspace = true
+<span class="add">+flate2.workspace = true</span>
+ flox-rust-sdk.workspace = true
+<span class="add">+fslock.workspace = true      futures.workspace = true</span>
+<span class="add">+indicatif.workspace = true   reqwest.workspace = true</span>
+<span class="add">+serde.workspace = true       serde_json.workspace = true</span>
+<span class="add">+sha2.workspace = true        tar.workspace = true</span>
+<span class="add">+thiserror.workspace = true   time.workspace = true</span>
+<span class="add">+tokio.workspace = true       toml.workspace = true</span>
+<span class="add">+url.workspace = true         uuid.workspace = true</span>
+<span class="add">+walkdir.workspace = true     zip.workspace = true</span>
+ tracing.workspace = true
 
-<p>The provider registry — one <code>pub mod</code> line per provider, alphabetically ordered.</p>
-
-<div class="filebar"><span>cli/flox-rust-sdk/src/providers/mod.rs</span><span>@@ -3,6 +3,7 @@</span></div>
-<pre class="code"> pub mod container_builder;
-<span class="add">+pub mod extensions;</span>
- pub mod flake_installable_locker;</pre>
-
+ [dev-dependencies]
+<span class="add">+flox-rust-sdk = { workspace = true, features = ["tests"] }</span>
+<span class="add">+httpmock, pretty_assertions, tempfile</span>
+<span class="add">+temp-env = { workspace = true, features = ["async_closure"] }</span></pre>
 <h4>Impact and architecture</h4>
-<p>One line, inserted alphabetically, making a 5,491-line module tree reachable. It is worth
-pausing on the ratio: the entire domain layer attaches to the SDK through a single declaration,
-and reverting that one line makes the whole thing dead code without touching anything else. That
-is what "isolated" means concretely, and it is only possible because the new code follows the
-existing provider convention exactly rather than inventing a placement of its own.</p>
+<p>This is the cost side of the relocation, and it is the honest one: dependencies did not
+disappear, they moved from <code>flox-rust-sdk</code>'s manifest to <code>beta</code>'s. The
+benefit is that they now sit on a crate whose churn does not force SDK review.</p>
+<p><code>temp-env</code> needs the <code>async_closure</code> feature explicitly or
+<code>temp_env::async_with_vars</code> — used to scope the GitHub base-URL override to a single
+test — will not resolve. That one is documented in <code>CLAUDE.local.md</code> and would
+otherwise cost an afternoon.</p>
 </div>
 
 <div class="entry">
 <h3>Cargo.toml <span style="color:var(--gray-500)">· workspace root</span></h3>
-<p class="meta">+3 / −0 · three new dependencies</p>
-
-<p>The workspace manifest, where shared dependency versions are declared once for every crate.</p>
-
-<div class="filebar"><span>Cargo.toml</span><span>@@ -96,8 +96,11 @@</span></div>
-<pre class="code"> systemd = { path = "cli/systemd" }
-<span class="add">+flate2 = "1"</span>
+<p class="meta">+2 / −0 · down from +3 in v1</p>
+<div class="filebar"><span>Cargo.toml</span></div>
+<pre class="code"> serde_yaml = "0.9"
 <span class="add">+sha2 = "0.10"</span>
- tar = "0.4"
- tempfile = "3.24.0"
-<span class="add">+zip = { version = "2", default-features = false, features = ["deflate"] }</span>
- textwrap = { version = "0.16.2", features = ["terminal_size"] }</pre>
+ shell-escape = "0.1.5"
 
+ xdg = "3.0"
+<span class="add">+zip = { version = "2", default-features = false, features = ["deflate"] }</span></pre>
 <h4>Impact and architecture</h4>
-<p>Exactly the three the design document predicted for archive support and checksums — and
-<code>tar</code> is conspicuously <em>not</em> among them, because the workspace already had it.
-That is the "no new dependencies unless unavoidable, check <code>Cargo.lock</code> first"
-constraint working as intended.</p>
-
+<p>v1 added three; v2 adds two, because upstream gained <code>flate2</code> in the intervening
+737 commits. <code>tar</code>, <code>walkdir</code>, <code>url</code>, and
+<code>serde_json</code> were already present — the "check <code>Cargo.lock</code> first"
+constraint doing its job.</p>
 <p><code>zip</code> is pinned with <code>default-features = false</code> and only
-<code>deflate</code> enabled, which keeps the compression backends the crate would otherwise pull
-in out of the build. A small discipline, and the kind that reviewers of a dependency addition
-look for.</p>
-</div>
-
-<div class="entry">
-<h3>cli/flox-rust-sdk/Cargo.toml</h3>
-<p class="meta">+6 / −2 · where the two hand-written deletions live</p>
-
-<p>The SDK crate's manifest, declaring which workspace dependencies this crate uses.</p>
-
-<div class="filebar"><span>cli/flox-rust-sdk/Cargo.toml</span><span>dependencies and dev-dependencies</span></div>
-<pre class="code"> enum_dispatch.workspace = true
-<span class="add">+flate2.workspace = true</span>
- fslock.workspace = true
- indexmap.workspace = true
-<span class="add">+indicatif.workspace = true</span>
- serde.workspace = true
-<span class="add">+sha2.workspace = true</span>
- shell-escape.workspace = true
- systemd.workspace = true
-<span class="del">-temp-env.workspace = true</span>
-<span class="add">+tar.workspace = true</span>
-<span class="add">+temp-env = { workspace = true, features = ["async_closure"] }</span>
- tempfile.workspace = true
- tracing.workspace = true
-<span class="add">+zip.workspace = true</span>
-
- [dev-dependencies]
- proptest-derive.workspace = true
-<span class="del">-tar.workspace = true</span>
- temp-env.workspace = true</pre>
-
-<h4>Impact and architecture</h4>
-<p>Both deletions are moves rather than removals, and each encodes something real.</p>
-
-<p><strong><code>tar</code> moved from dev-dependencies to dependencies.</strong> It was previously
-test-only; archive extraction is now production behavior, so it graduates. The line count says
-"−1" but nothing lost a capability.</p>
-
-<p><strong><code>temp-env</code> gained the <code>async_closure</code> feature.</strong> This is
-the one edit here that a maintainer would otherwise waste an afternoon on, and
-<code>CLAUDE.local.md</code> flags it: <code>temp_env::async_with_vars</code> is gated behind that
-feature, and without declaring it the tests that scope
-<code>FLOX_EXTENSIONS_GITHUB_BASE_URL</code> to a single test simply will not resolve.</p>
-
-<p><code>indicatif</code> is the quiet addition — progress bars. It is the only dependency here
-that serves user experience rather than correctness, and the only one the design document did not
-anticipate.</p>
+<code>deflate</code>, keeping the other compression backends out of the build.</p>
 </div>
 
 <div class="entry">
 <h3>pkgs/flox-cli-tests/default.nix</h3>
-<p class="meta">+2 / −0 · without this, the bats suite cannot run</p>
-
-<p>The Nix derivation that builds the CLI test runner. Its <code>paths</code> list is the complete
-<code>PATH</code> available inside a bats test — the test wrapper controls it entirely, and
-<code>nix develop</code> does not propagate through.</p>
-
-<div class="filebar"><span>pkgs/flox-cli-tests/default.nix</span><span>function args and paths list</span></div>
+<p class="meta">+2 / −0 · without this the bats suite cannot run</p>
+<div class="filebar"><span>pkgs/flox-cli-tests/default.nix</span></div>
 <pre class="code">   procps,
    pstree,
 <span class="add">+  python3,</span>
@@ -543,56 +455,29 @@ anticipate.</p>
      pstree
 <span class="add">+    python3</span>
      unixtools.util-linux</pre>
-
 <h4>Impact and architecture</h4>
-<p>Two lines that explain a technique described on the
-<a href="architecture.html">architecture page</a>. The bats suite stands up a fake GitHub using a
-Python <code>http.server</code> on a random port, and builds archive fixtures with
-<code>python3 -c 'import tarfile; …'</code> — because <code>gzip</code>, <code>unzip</code>, and
-<code>curl</code> are simply absent from that <code>PATH</code>. Python is not a convenience here;
-it is the only available tool for the job.</p>
-
-<p>This is also the most commonly missed edit in the whole branch. <code>CLAUDE.local.md</code>
-states the rule directly: tools used by <code>cli/tests/*.bats</code> must be added here or they
-will not exist at runtime. Adding a test that shells out to something new means editing this file
-too, and the failure mode is a confusing "command not found" inside a sandbox.</p>
+<p>The <code>paths</code> list <em>is</em> the complete <code>PATH</code> inside a bats test — the
+wrapper controls it and <code>nix develop</code> does not propagate through. The suite stands up a
+fake GitHub with a Python <code>http.server</code> and builds archive fixtures with
+<code>python3 -c 'import tarfile; …'</code>, because <code>gzip</code>, <code>unzip</code>, and
+<code>curl</code> are simply absent.</p>
+<p>The most commonly missed edit in the branch: add a test that shells out to something new and
+this file needs editing too, or it fails with a confusing "command not found".</p>
 </div>
 
-<h2 id="incidental">Incidental changes · 3 files</h2>
-
-<p>Present in the diff, not authored as part of this work. Separating them is what makes the
-127-line wiring figure honest.</p>
-
-<div class="entry entry-quiet">
-<h3>cli/catalog-api-v1/src/client.rs</h3>
-<p class="meta">+57 / −41 · generated file · formatter churn</p>
-<p>A client generated from an OpenAPI spec, not written by hand. <code>just format</code>
-normalizes it — trailing-comma churn inside <code>format!</code> calls — so any contributor who
-runs the standard format task picks up this diff whether or not their change has anything to do
-with it. <code>CLAUDE.local.md</code> instructs including it in the commit rather than reverting,
-precisely so it does not ping-pong between contributors.</p>
-<p><strong>Why it matters here:</strong> it accounts for 41 of the branch's 51 deletions. Counting
-it as extension work would inflate the apparent footprint on flox's existing code by more than an
-order of magnitude.</p>
-</div>
+<h2 id="incidental">Incidental · 1 file</h2>
 
 <div class="entry entry-quiet">
 <h3>Cargo.lock</h3>
-<p class="meta">+66 / −7 · generated file</p>
-<p>Cargo's resolution output for the three new dependencies and their transitive graph. Sixty-six
-lines for <code>flate2</code>, <code>sha2</code>, and <code>zip</code> is a modest transitive
-footprint, which is itself the argument that the dependency additions were conservative.</p>
-</div>
-
-<div class="entry entry-quiet">
-<h3>.gitignore</h3>
-<p class="meta">+1 / −0 · unrelated to extensions</p>
-<div class="filebar"><span>.gitignore</span></div>
-<pre class="code"> !test_data/**/build
-<span class="add">+/.worktrees/</span></pre>
-<p>Ignores a worktree directory — development-workflow hygiene that happened to be committed on
-this branch. Listed for completeness so the file count reconciles against
-<code>git diff --name-status</code>, not because it belongs to the feature.</p>
+<p class="meta">+80 / −4 · generated</p>
+<p>Cargo's resolution for <code>sha2</code> and <code>zip</code> plus their transitive graph.
+Eighty lines is a modest footprint, which is itself evidence the dependency additions were
+conservative.</p>
+<p><strong>Note what is absent.</strong> v1's diff also carried
+<code>cli/catalog-api-v1/src/client.rs</code> (+57/−41) — generated-client formatting churn picked
+up by <code>just format</code> — and a <code>.gitignore</code> line. Neither appears here, because
+<code>just format</code> has not yet been run on this branch. Expect the catalog-client churn to
+reappear when it is; <code>CLAUDE.local.md</code> says commit it rather than revert.</p>
 </div>
 
 <h2>What the shape of this diff proves, and what it does not</h2>
@@ -600,35 +485,29 @@ this branch. Listed for completeness so the file count reconciles against
 <div class="grid-2">
 <div class="card card-stripe">
 <h4>What it proves</h4>
-<p>The isolation claim is real and measurable. Seven files of wiring, 127 added lines, three
-removed. Reverting the branch is mechanically simple: delete two directories and four files,
-revert seven small edits. Nothing was refactored on the way past, and no existing abstraction was
-bent to accommodate the new code.</p>
+<p>The isolation claim is measurable. Seven files of wiring, 44 added lines, zero hand-written
+deletions, and an untouched <code>flox-rust-sdk</code>. Reverting is mechanically simple: delete
+two directories and four files, revert seven small edits. Nothing was refactored on the way past.</p>
 </div>
 <div class="card card-stripe">
 <h4>What it does not prove</h4>
-<p>A small diff is not a safe diff. The three lines in <code>main.rs</code> execute on every failed
-parse for every user; the <code>Features</code> change alters a default that ships on. Line count
-measures <em>reviewability</em>, not risk. Both of those edits deserve more scrutiny per line than
-the 2,432-line <code>manager.rs</code>, which cannot run unless someone invokes it.</p>
+<p>A small diff is not a safe diff. The six lines in <code>main.rs</code> execute on every failed
+parse for every user. Line count measures <em>reviewability</em>, not risk — those six deserve more
+scrutiny per line than the 2,432-line <code>manager.rs</code>, which cannot run unless someone
+invokes it.</p>
 </div>
 </div>
 
-<h3>One thing to know before reading the branch</h3>
+<h3>Before reading the branch</h3>
 
 <div class="callout">
-<p><strong>The working tree is not clean.</strong> Three tracked files carry uncommitted changes —
-<code>cli/tests/extension.bats</code> (+118 lines over its committed state),
-<code>.gitignore</code>, and the generated catalog client — alongside untracked
-<code>.factory/</code>, <code>docs/superpowers/</code>, and a <code>.DS_Store</code>.</p>
-<p>All figures on this page are the committed state. <code>CLAUDE.local.md</code> anticipates
-exactly this and gives the rule that follows from it: never <code>git add .</code> or
-<code>git add -A</code> on this branch — stage specific paths, or unrelated long-lived work gets
-swept into a feature commit.</p>
+<p><strong>Nothing here is committed.</strong> The entire port sits as working-tree changes in a
+worktree at <code>../flox-gh-plugin-extension-v2</code>. <code>just format</code> has not been run,
+and <code>PROJECTS.md</code> still has open checkboxes for the verification tasks.</p>
 </div>
 
 <footer class="pagefoot">
-  <span>Diff measured against merge-base <code>0badcdf59</code> on 2026-07-21.</span>
+  <span>Diff measured against <code>origin/main</code> at <code>dd390e66b</code> on 2026-07-21.</span>
   <span class="nextprev">
     <a href="architecture.html">← Architecture</a>
     <a href="manifest.html">Next: the manifest →</a>

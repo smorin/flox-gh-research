@@ -144,10 +144,14 @@ checking <code>Cargo.lock</code> first.</p>
 
 <div class="callout">
 <p><strong>Additive by construction, not by discipline.</strong> The whole subsystem sits behind
-one feature flag, one new variant on the top-level <code>Commands</code> enum, and one arm in the
-dispatch match. During the prototype window the variant carried <code>#[bpaf(hide)]</code>, so a
-build without the flag produced <em>bit-identical</em> help output and behavior to stock flox. The
-GA commit flipped the default and removed the hide attribute in one change.</p>
+the pre-existing <code>features.beta</code> flag, one variant on the <code>BetaCommands</code>
+group, and a six-line hook in <code>main.rs</code>. It is <em>off by default</em> and hidden from
+<code>flox --help</code>, so a stock build behaves exactly as it does today.</p>
+<p>The predecessor branch did the opposite — it added its own <code>Features::extensions</code>
+field defaulting to <em>on</em>, with an env-var opt-out, and a top-level
+<code>Commands::Extension</code> variant. Reusing the existing beta flag removed the
+<code>Features</code> edit entirely and dropped five per-handler gates to zero, because the
+<code>Commands::Beta</code> arm gates once before dispatching.</p>
 </div>
 
 <p>One constraint is worth calling out because it is a real API-design opinion. Adding
@@ -158,37 +162,49 @@ disturb anything else.</p>
 
 <h2>Crate split</h2>
 
-<p>Two homes, following the pattern the flox repo already uses. Command parsing and user-facing
-presentation live in the binary crate; domain logic lives in the SDK, so it is testable without a
-<code>bpaf</code> context and reusable later by FloxHub or the VS Code extension. This mirrors
-<code>gh</code> keeping <code>pkg/extensions/</code> separate from
-<code>pkg/cmd/extension/</code>.</p>
+<p>Two homes. Command parsing and user-facing presentation live in the <code>flox</code> binary
+crate; domain logic lives in the <code>beta</code> crate, where it is testable without a
+<code>bpaf</code> context. This mirrors <code>gh</code> keeping <code>pkg/extensions/</code>
+separate from <code>pkg/cmd/extension/</code>.</p>
+
+<div class="callout">
+<p><strong>The domain half deliberately does <em>not</em> live in <code>flox-rust-sdk</code>.</strong>
+The repo's own <code>adding-beta-subcommand</code> skill states that changes outside
+<code>cli/beta</code> "require more thorough review which will make it slower to add the beta
+command." Relocating cost almost nothing — across 5,500 lines the module had three
+<code>crate::</code> imports, all public SDK API — and bought a completely untouched SDK.</p>
+<p>The command half could not follow it: it needs <code>subcommand_metric!</code>,
+<code>utils::message</code>, <code>SHELL_COMPLETION_DIR</code>, and
+<code>utils::active_environments</code>, none reachable from <code>beta</code> without a
+dependency cycle, since <code>flox</code> already depends on <code>beta</code>.</p>
+</div>
 
 <div class="grid-2">
 <div>
-<div class="filebar"><span>cli/flox-rust-sdk/src/providers/extensions/</span><span>domain</span></div>
+<div class="filebar"><span>cli/beta/src/extensions/</span><span>domain</span></div>
 <pre class="code">manager.rs    2,432   install · list · remove · upgrade
 github.rs     1,804   REST, clone, asset resolution
 archive.rs      497   tar/zip extraction + traversal guards
 dispatch.rs     363   find · resolve_mode · env scrubbing
 manifest.rs     204   AuthorManifest + InstalledState
 layout.rs        63   XDG path composition
-mod.rs           61   public re-exports
-reserved.rs      55   built-in command name list
-extension.rs     12   shared types</pre>
+mod.rs           63   public re-exports
+reserved.rs      61   built-in command name list
+extension.rs     12   shared types
+source.rs         1   stub — trait never written</pre>
 </div>
 <div>
 <div class="filebar"><span>cli/flox/src/commands/extension/</span><span>surface</span></div>
-<pre class="code">mod.rs          341   bpaf enum · dispatch · exec
-search.rs       209   GitHub topic search
-upgrade.rs      163   single + --all + --dry-run
+<pre class="code">mod.rs          350   bpaf enum · dispatch · exec
+search.rs       208   GitHub topic search
+upgrade.rs      162   single + --all + --dry-run
 format.rs       144   table rendering
-install.rs       91   arg handling
-list.rs          32
-remove.rs        27
+install.rs       90   arg handling
+list.rs          31
+remove.rs        26
 
 cli/tests/
-extension.bats  997   integration suite</pre>
+extension.bats 1066   27 integration tests</pre>
 </div>
 </div>
 
@@ -459,8 +475,13 @@ the failure cases too.</p>
 
 <h2>Command surface</h2>
 
-<p>Five verbs shipped, not the four in the design document — <code>search</code> was pulled forward
-from v2.</p>
+<p>Five verbs, not the four in the design document — <code>search</code> was pulled forward. All
+five are hidden from <code>flox --help</code> and refuse to run unless beta is enabled:</p>
+
+<div class="filebar"><span>beta disabled</span></div>
+<pre class="code">$ flox extension list
+✘ ERROR: Enable beta features to run this command:
+  flox config --set features.beta true</pre>
 
 <div class="scroll-x">
 <table class="tbl">
@@ -498,8 +519,9 @@ assembling clone URLs. They double as the test seam: the unit suite points them 
   </div>
   <div class="card card-outlined">
     <h4>Integration</h4>
-    <p>997 lines of bats covering install from every source, pinning, upgrade, all three activation
-    modes, and a gh-parity smoke block translated from <code>gh</code>'s own tests.</p>
+    <p>27 tests covering install from every source, pinning, upgrade, all three activation modes,
+    a gh-parity smoke block translated from <code>gh</code>'s own tests, and a drift guard that
+    walks every visible top-level command and asserts the installer refuses it.</p>
   </div>
 </div>
 
@@ -518,7 +540,7 @@ inside bats, so archive fixtures are built with <code>python3 -c 'import tarfile
 than by shelling out to <code>gzip</code> or <code>curl</code>, which are simply absent.</p>
 
 <footer class="pagefoot">
-  <span>Source: <code>cli/flox-rust-sdk/src/providers/extensions/</code> and <code>cli/flox/src/commands/extension/</code></span>
+  <span>Source: <code>cli/beta/src/extensions/</code> and <code>cli/flox/src/commands/extension/</code></span>
   <span class="nextprev">
     <a href="research.html">← The design document</a>
     <a href="manifest.html">Next: the manifest →</a>

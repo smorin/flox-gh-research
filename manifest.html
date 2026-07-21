@@ -250,9 +250,13 @@ has only substring matching to work with.</p>
 <code>render_asset_template</code> substitutes Rust's raw <code>std::env::consts::OS</code>, which
 is <code>"macos"</code> on macOS. Only <code>{ext}</code> is computed — <code>"zip"</code> on
 Windows, <code>"tar.gz"</code> everywhere else.</p>
-<p>The <code>flox-hello-binary</code> reference repo is correct and the documentation is wrong: its
+<p>The <code>flox-hello-binary</code> reference repo is correct and the documentation was wrong: its
 assets are named <code>flox-hello-binary-macos-aarch64.tar.gz</code>, which is exactly what the
 template renders.</p>
+<p><strong>Fixed on the v2 branch.</strong> The author guide now names
+<code>std::env::consts::OS</code> as the source, states plainly that the value is <code>macos</code>
+rather than <code>darwin</code>, and explains that only <code>{ext}</code> is computed. The defect
+remains on v1.</p>
 <p>What makes this hard to notice is that following the incorrect documentation still works. An
 author who ships <code>...-darwin-aarch64.tar.gz</code> fails the exact template match, falls
 through to substring matching — which accepts <code>darwin</code> <em>and</em> <code>macos</code> —
@@ -483,7 +487,7 @@ asked for.</p>
 </div>
 
 <footer class="pagefoot">
-  <span>Sources: <code>providers/extensions/manifest.rs</code>, <code>docs/extensions/author-guide.md</code></span>
+  <span>Sources: <code>cli/beta/src/extensions/manifest.rs</code>, <code>docs/extensions/author-guide.md</code></span>
   <span class="nextprev">
     <a href="architecture.html">← Architecture</a>
     <a href="plugins.html">Next: the three extensions →</a>

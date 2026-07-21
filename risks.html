@@ -305,8 +305,17 @@ ordering would have caught all three before the flag flip.</p>
 
 <h2>Specification and documentation drift</h2>
 
-<p>Everything below is a documentation defect rather than a code defect. Nothing here breaks a
-build. All of it would mislead someone reading the canonical sources.</p>
+<div class="callout">
+<p><strong>All of these were fixed during the <code>P11</code> rebase</strong>, along with a fifth
+found by running the commands instead of trusting the examples: the quick tour showed the extension
+installing as <code>hello</code> when the repo <code>flox-hello-script</code> yields
+<code>hello-script</code>, and printed a <code>✓</code> column and three-column table that the real
+<code>list</code> output does not have. They remain present on the v1 branch, and are recorded here
+because the class of defect matters more than the instances.</p>
+</div>
+
+<p>Everything below was a documentation defect rather than a code defect. None broke a build. All
+of it would have misled someone reading the canonical sources.</p>
 
 <div class="scroll-x">
 <table class="tbl">
@@ -376,12 +385,25 @@ rejected — so an extension can never shadow a core command. But the reverse is
 core later adds a top-level subcommand matching an already-installed extension, the parser will
 match the built-in first and the extension becomes silently unreachable. No error, no warning; the
 command simply does something else.</p>
+<p><strong>The rebase proved this is not hypothetical.</strong> Moving onto July's
+<code>main</code> silently invalidated the reserved list: <code>deactivate</code> and
+<code>run</code> had become top-level commands upstream, and the hidden <code>beta-enabled</code>
+and <code>factory</code> existed too — none of the four were in <code>reserved.rs</code>. Until
+this was caught, <code>flox extension install someone/flox-run</code> would have been
+<em>accepted</em>, and <code>flox run</code> would have resolved to the built-in forever. All four
+are now listed.</p>
+
 <p>The adjacent problem — keeping <code>reserved.rs</code> in sync with the <code>Commands</code>
-enum — <em>is</em> guarded. <code>cli/flox/src/commands/mod.rs</code> carries an
-<code>extension_drift_tests</code> module that scrapes <code>flox --help</code> and asserts every
-visible top-level command appears in <code>RESERVED_COMMAND_NAMES</code>. Its own doc comment
-states the shadowing direction plainly: <em>a top-level subcommand always shadows an extension of
-the same name.</em></p>
+enum — <em>is</em> guarded. In v1 that was an 80-line Rust module in
+<code>cli/flox/src/commands/mod.rs</code>. In v2 it is a bats test that walks every visible
+top-level command, attempts to install <code>flox-&lt;name&gt;</code>, and asserts the refusal —
+exercising the shipped parser and the real installer, with zero lines in the reviewed crate.</p>
+
+<p>The v1 version would also have <em>misfired</em>: its scraper reads wrapped description text as
+commands, and against current 80-column help it classifies the continuation word
+<code>invocation</code> as a top-level command. The bats version stops at
+<code>Available options:</code> and requires <code>[a-z]</code> after exactly four spaces, and
+fails if it parses fewer than ten commands so a layout change cannot make it vacuously pass.</p>
 <p>That test protects the check that exists. It cannot protect against the case above, because
 the collision only becomes real after a user has already installed the extension — and no
 installed-extension audit runs when flox itself gains a command. Note also that hidden commands
@@ -444,23 +466,35 @@ maintained by hand in the list.</p>
 
 <h2>The largest open question is not technical</h2>
 
-<p><code>PROJECTS.md</code> states the branch discipline plainly: all work is committed exclusively
-to <code>smorin/github-extension-prototype</code>, with no merges to <code>main</code>, no side
-branches, and no pull request opened until the branch owner decides.</p>
+<p><code>PROJECTS.md</code> states the branch discipline plainly: no merges to <code>main</code>,
+no pull request opened until the branch owner decides. The subsystem is feature-complete, tested,
+documented, demonstrated by three reference extensions — and has never been proposed upstream.</p>
 
-<p>So the subsystem is feature-complete through <code>P08</code>, GA'd against its own criteria,
-hardened by a review sweep, documented for both users and authors, and demonstrated by three
-reference extensions — and it lives on a branch in a fork that has never been proposed upstream.</p>
+<p>The <code>P11</code> rebase changed the shape of this risk substantially, in both directions.</p>
+
+<div class="grid-2">
+<div class="card card-stripe">
+<h4>What got better</h4>
+<p>The branch now sits on the current <code>main</code> rather than one three months stale, and the
+integration points shrank from seven files to three, +127 lines to +15. The
+<code>Features</code> struct — which upstream <em>did</em> move to a different crate during those
+737 commits — is no longer touched at all. There is materially less surface for the next rebase to
+conflict with.</p>
+</div>
+<div class="card card-stripe">
+<h4>What the rebase revealed</h4>
+<p>Three months of drift silently invalidated the reserved-name list, and nothing caught it until a
+guard was written. That is the cost of divergence made concrete: the failure was not a merge
+conflict, which git would have surfaced, but a <em>semantic</em> one that compiled and passed tests
+while being wrong.</p>
+</div>
+</div>
 
 <div class="callout">
-<p><strong>What that means for the work's value.</strong> Every technical risk on this page is
-tractable and most are small. The risk that dominates them is that the branch diverges from
-<code>flox/flox</code> faster than it can be rebased. This is a fork of a moving repository at
-v1.11.2; the two-phase parse in <code>main.rs</code>, the <code>Commands</code> enum variant, and
-the <code>Features</code> struct are all in files that upstream touches routinely.</p>
-<p>If this is intended to land upstream, the sequencing question — propose now with telemetry and
-Linux assets outstanding, or complete them first and rebase against a further-moved
-<code>main</code> — is the decision worth making deliberately rather than by default.</p>
+<p><strong>The sequencing question is still open</strong>, and the rebase sharpened rather than
+settled it: propose now with telemetry, the FloxHub abstraction, and Linux binary assets
+outstanding — or complete them and rebase again against a further-moved <code>main</code>, having
+just learned what a quiet three-month drift costs.</p>
 </div>
 
 <h2>If you are picking this up, read these first</h2>

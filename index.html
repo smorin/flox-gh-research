@@ -266,10 +266,19 @@ an extension can declare which flox environment it runs inside.</p>
 </div>
 
 <div class="stats">
-  <div class="stat"><div class="v">~7.5k</div><div class="k">Lines added</div><div class="d">purely additive</div></div>
-  <div class="stat"><div class="v">8 / 8</div><div class="k">Projects landed</div><div class="d">P01 – P08</div></div>
-  <div class="stat"><div class="v">997</div><div class="k">Lines of bats</div><div class="d">extension.bats</div></div>
-  <div class="stat"><div class="v">3</div><div class="k">Reference repos</div><div class="d">script · binary · local</div></div>
+  <div class="stat"><div class="v">31</div><div class="k">Files changed</div><div class="d">+10,854 / −4</div></div>
+  <div class="stat"><div class="v">9 / 9</div><div class="k">Projects landed</div><div class="d">P01–P08 · P11</div></div>
+  <div class="stat"><div class="v">27</div><div class="k">Integration tests</div><div class="d">all passing</div></div>
+  <div class="stat"><div class="v">0</div><div class="k">SDK changes</div><div class="d">flox-rust-sdk untouched</div></div>
+</div>
+
+<div class="callout">
+<p><strong>Two branches.</strong> The work was first built on April's <code>main</code> as
+<code>smorin/github-extension-prototype</code>, with its own always-on feature flag. It was then
+rebased onto July's <code>main</code> — 737 commits later — as
+<code>smorin/github-extension-prototype-v2</code>, gated behind the pre-existing
+<code>features.beta</code> flag and off by default. <em>These pages describe v2</em>, and note v1
+where the difference is instructive.</p>
 </div>
 
 <h2>What actually exists</h2>
@@ -288,9 +297,11 @@ an extension can declare which flox environment it runs inside.</p>
   <div class="card card-outlined">
     <div class="kicker">Artifact two</div>
     <h3>The implementation</h3>
-    <p>A fork of <code>flox/flox</code> at v1.11.2 on branch
-    <code>smorin/github-extension-prototype</code>. Nine SDK modules, six CLI command modules,
-    and a bats suite. Shipping on by default.</p>
+    <p>A clone of <code>flox/flox</code> on branch
+    <code>smorin/github-extension-prototype-v2</code>, branched from <code>origin/main</code> at
+    <code>dd390e66b</code>. Ten domain modules in the <code>beta</code> crate, seven CLI command
+    modules, and 27 integration tests. Hidden and off by default behind
+    <code>features.beta</code>.</p>
     <p><a href="architecture.html">Read the architecture →</a></p>
   </div>
   <div class="card card-outlined">
@@ -325,6 +336,7 @@ itself is already past v1.9.</p>
 <tr><td><code>P08</code></td><td>Discovery — <code>search</code></td><td><code>v1.1.0</code></td><td><span class="badge badge-done">landed</span></td><td>Shipped early; design doc had it as v2</td></tr>
 <tr><td><code>P09</code></td><td>Authoring and FloxHub source</td><td>—</td><td><span class="badge badge-draft">not started</span></td><td>Needs more detail</td></tr>
 <tr><td><code>P10</code></td><td>Richer UX and ecosystem</td><td>—</td><td><span class="badge badge-draft">not started</span></td><td>Needs more detail</td></tr>
+<tr><td><code>P11</code></td><td>Rebase onto current main; gate behind <code>features.beta</code></td><td><code>v1.2.0</code></td><td><span class="badge badge-done">landed</span></td><td>Off by default; SDK untouched</td></tr>
 </tbody>
 </table>
 </div>
@@ -389,14 +401,19 @@ placeholder substitution that the code does not perform.</p>
 
 <div class="filebar"><span>local checkout paths</span></div>
 <pre class="code">/Users/stevemorin/c/flox_repos/
-├── flox-gh-plugin/                     fork of flox/flox @ v1.11.2
-│   │                                   branch: smorin/github-extension-prototype
+├── flox-gh-plugin/                     clone of flox/flox
+│   │                                   branch: smorin/github-extension-prototype  (v1)
 │   ├── research/gh_extension_flox.md   the design document
 │   ├── PROJECTS.md                     P01–P10 tracking
 │   ├── docs/extensions/                user guide · author guide
 │   ├── cli/flox/src/commands/extension/        CLI surface
-│   ├── cli/flox-rust-sdk/src/providers/extensions/   domain logic
-│   └── cli/tests/extension.bats        997 lines of integration tests
+│   ├── cli/flox-rust-sdk/src/providers/extensions/   domain logic (v1 placement)
+│   └── cli/tests/extension.bats        integration tests
+│
+├── flox-gh-plugin-extension-v2/        worktree · branch: …-prototype-v2
+│   ├── cli/beta/src/extensions/        domain logic (v2 placement)
+│   ├── cli/flox/src/commands/extension/        CLI surface
+│   └── cli/tests/extension.bats        27 tests, all passing
 │
 ├── flox-hello-script/                  script kind
 ├── flox-hello-binary/                  binary kind  (macOS only at v0.1.0)

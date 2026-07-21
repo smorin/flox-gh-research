@@ -349,7 +349,7 @@ item was the least load-bearing thing on the list, and one v2 feature arrived ea
 post-GA</em> — rather than left open. The GA criterion was met without them.</li>
 <li><strong>The feature flag inverted rather than disappeared.</strong> The plan said remove
 <code>FLOX_EXTENSIONS_ENABLE</code> at GA. What shipped is
-<code>FLOX_FEATURES_EXTENSIONS</code> defaulting to on, with the env var retained as an opt-out.
+<code>FLOX_FEATURES_EXTENSIONS</code> defaulting to on, with the env var retained as an opt-out. The later rebase (<code>P11</code>) reversed this again, dropping the bespoke flag for the pre-existing <code>features.beta</code>, off by default.
 Setting it to <code>0</code>, <code>false</code>, <code>no</code>, or <code>off</code> disables
 both the subcommand family and the dispatch fallback.</li>
 <li><strong>Example repos moved out of the GA milestone.</strong> <code>M6</code> listed them as a
