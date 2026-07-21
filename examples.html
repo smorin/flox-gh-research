@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Example repositories — links and install commands</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;430;500;600&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  color-scheme: light;
+  --clay:    #D97757;
+  --slate:   #141413;
+  --ivory:   #FAF9F5;
+  --oat:     #E3DACC;
+  --white:    #FFFFFF;
+  --gray-100: #F0EEE6;
+  --gray-300: #D1CFC5;
+  --gray-500: #87867F;
+  --gray-700: #3D3D3A;
+  --success: #788C5D;
+  --warning: #C78E3F;
+  --danger:  #B04A4A;
+  --info:    #5C7CA3;
+  --sp-1: 4px;  --sp-2: 8px;
+  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px;
+  --sp-7: 48px; --sp-8: 64px;
+  --r-xs: 4px;  --r-sm: 8px;
+  --r-md: 12px; --r-lg: 20px;
+  --shadow-sm: 0 1px 2px rgba(20,20,19,.06);
+  --shadow-md: 0 4px 10px rgba(20,20,19,.08);
+  --shadow-lg: 0 12px 28px rgba(20,20,19,.12);
+  --ease-out:    cubic-bezier(.16, 1, .3, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --font-sans:  "Geist", "Söhne", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Source Serif 4", "Tiempos", Georgia, serif;
+  --font-mono:  "JetBrains Mono", "Berkeley Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ivory); color: var(--slate); font-family: var(--font-sans); font-size: 16px; font-weight: 430; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+strong { font-weight: 500; color: var(--slate); }
+em { font-style: normal; font-weight: 500; color: var(--slate); }
+a { color: var(--clay); text-decoration: none; border-bottom: 1px solid rgba(217,119,87,.3); }
+a:hover { border-bottom-color: var(--clay); }
+code { font-family: var(--font-mono); font-size: .89em; background: var(--gray-100); padding: 1px 5px; border-radius: var(--r-xs); color: var(--gray-700); }
+.tbl code, pre code { background: none; padding: 0; }
+.nav { background: var(--white); border-bottom: 1px solid var(--gray-300); position: sticky; top: 0; z-index: 20; }
+.nav-inner { max-width: 940px; margin: 0 auto; padding: var(--sp-3) var(--sp-5); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-4); }
+.nav-brand { font-family: var(--font-mono); font-size: 13px; color: var(--gray-500); margin-right: auto; }
+.nav a { font-size: 14px; color: var(--gray-700); border-bottom: 2px solid transparent; padding-bottom: 2px; }
+.nav a:hover { color: var(--slate); border-bottom-color: var(--gray-300); }
+.nav a.here { color: var(--clay); border-bottom-color: var(--clay); }
+.wrap { max-width: 940px; margin: 0 auto; padding: var(--sp-7) var(--sp-5) var(--sp-8); }
+h1 { font-family: var(--font-serif); font-size: 40px; line-height: 1.15; font-weight: 600; margin: 0 0 var(--sp-4); }
+.accent { font-family: var(--font-serif); font-style: italic; color: var(--clay); font-weight: inherit; }
+h2 { font-size: 24px; line-height: 1.3; font-weight: 500; margin: var(--sp-8) 0 var(--sp-4); padding-top: var(--sp-5); border-top: 1px solid var(--gray-300); }
+h3 { font-size: 18px; line-height: 1.35; font-weight: 500; margin: var(--sp-6) 0 var(--sp-3); }
+h4 { font-size: 15px; font-weight: 500; margin: var(--sp-5) 0 var(--sp-2); color: var(--gray-700); }
+p { margin: 0 0 var(--sp-4); }
+ul, ol { margin: 0 0 var(--sp-4); padding-left: var(--sp-5); }
+li { margin-bottom: var(--sp-2); }
+.lede { font-size: 18px; line-height: 1.55; color: var(--gray-700); margin-bottom: var(--sp-5); }
+.kicker { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--gray-500); margin-bottom: var(--sp-2); }
+.callout { background: var(--oat); border-left: 3px solid var(--clay); padding: var(--sp-4) var(--sp-5); border-radius: var(--r-sm); color: var(--gray-700); margin: var(--sp-5) 0; }
+.callout strong { color: var(--slate); }
+.callout p:last-child { margin-bottom: 0; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; margin: var(--sp-4) 0 var(--sp-5); background: var(--white); }
+.tbl th, .tbl td { text-align: left; padding: var(--sp-3); border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+.tbl th { font-weight: 500; color: var(--gray-500); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.tbl tr:hover td { background: var(--gray-100); }
+.tbl td.rowhead { color: var(--gray-500); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; font-weight: 500; white-space: nowrap; width: 130px; }
+.scroll-x { overflow-x: auto; background: var(--white); border-radius: var(--r-sm); }
+pre.code { background: var(--white); border: 1px solid var(--gray-300); border-radius: var(--r-sm); padding: var(--sp-4); overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; color: var(--gray-700); margin: 0 0 var(--sp-5); }
+.filebar { display: flex; justify-content: space-between; align-items: center; background: var(--gray-100); border: 1px solid var(--gray-300); border-bottom: 0; border-radius: var(--r-sm) var(--r-sm) 0 0; padding: 6px var(--sp-3); font-family: var(--font-mono); font-size: 12px; color: var(--gray-700); margin-top: var(--sp-4); }
+.filebar + pre.code { margin-top: 0; border-radius: 0 0 var(--r-sm) var(--r-sm); }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; line-height: 1.3; white-space: nowrap; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.badge-draft { background: var(--gray-100); color: var(--gray-700); }
+.badge-in-review { background: rgba(92, 124, 163, .14); color: var(--info); }
+.badge-done { background: rgba(120, 140, 93, .16); color: var(--success); }
+.badge-overdue { background: rgba(176, 74, 74, .14); color: var(--danger); }
+.badge-blocked { background: rgba(199, 142, 63, .14); color: var(--warning); }
+.risk { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: var(--r-xs); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; border: 1px solid; white-space: nowrap; }
+.risk-safe { color: var(--success); border-color: rgba(120,140,93,.35); background: rgba(120,140,93,.08); }
+.risk-look { color: var(--warning); border-color: rgba(199,142,63,.35); background: rgba(199,142,63,.08); }
+.risk-attn { color: var(--danger);  border-color: rgba(176,74,74,.35);  background: rgba(176,74,74,.08); }
+.card { background: var(--white); border-radius: var(--r-md); padding: var(--sp-4); transition: box-shadow 200ms var(--ease-out); }
+.card-outlined { border: 1px solid var(--gray-300); }
+.card-stripe { border: 1px solid var(--gray-300); border-left: 3px solid var(--clay); }
+.card-inset { background: var(--gray-100); border: 1px solid var(--gray-100); box-shadow: inset 0 1px 0 rgba(20,20,19,.04); }
+.card h3, .card h4 { margin-top: 0; }
+.card p:last-child, .card ul:last-child { margin-bottom: 0; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+.repo { background: var(--white); border: 1px solid var(--gray-300); border-left: 3px solid var(--clay); border-radius: var(--r-md); padding: var(--sp-5); margin: var(--sp-5) 0; }
+.repo h3 { margin-top: 0; margin-bottom: var(--sp-1); font-family: var(--font-mono); font-size: 18px; }
+.repo h3 a { border-bottom: none; }
+.repo .tagline { color: var(--gray-500); font-size: 14px; margin-bottom: var(--sp-4); }
+.repo .tbl { margin-bottom: var(--sp-3); }
+.repo .tbl td { border-bottom: 1px solid var(--gray-100); }
+.repo .tbl tr:last-child td { border-bottom: 0; }
+.linkrow { display: flex; flex-wrap: wrap; gap: var(--sp-4); font-size: 14px; margin-top: var(--sp-3); }
+.dead { color: var(--gray-500); text-decoration: line-through; border-bottom: none; }
+footer.pagefoot { border-top: 1px solid var(--gray-300); margin-top: var(--sp-8); padding-top: var(--sp-5); font-size: 13px; color: var(--gray-500); display: flex; flex-wrap: wrap; gap: var(--sp-4); justify-content: space-between; }
+.nextprev { display: flex; gap: var(--sp-5); }
+@media (max-width: 640px) {
+  h1 { font-size: 30px; }
+  .wrap { padding: var(--sp-5) var(--sp-4) var(--sp-7); }
+  .nav-inner { padding: var(--sp-3) var(--sp-4); gap: var(--sp-3); }
+  .nav-brand { width: 100%; margin-right: 0; }
+  .tbl td.rowhead { width: auto; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="nav-inner">
+  <span class="nav-brand">flox extension research</span>
+  <a href="index.html">Overview</a>
+  <a href="research.html">Research</a>
+  <a href="architecture.html">Architecture</a>
+  <a href="changes.html">Changes</a>
+  <a href="manifest.html">Manifest</a>
+  <a href="plugins.html">Plugins</a>
+  <a class="here" href="examples.html">Examples</a>
+  <a href="risks.html">Risks</a>
+</div></nav>
+
+<div class="wrap">
+
+<div class="kicker">Public repositories</div>
+<h1>Where to <span class="accent">get them</span></h1>
+
+<p class="lede">The three reference extensions, their public URLs, and the exact command to install
+each one. For what each repo contains and why, see the
+<a href="plugins.html">plugins walkthrough</a>.</p>
+
+<h2>At a glance</h2>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Repository</th><th>Kind</th><th>Release</th><th>Install</th></tr></thead>
+<tbody>
+<tr>
+  <td><a href="https://github.com/smorin/flox-hello-script">smorin/flox-hello-script</a></td>
+  <td><code>script</code></td>
+  <td><code>v0.1.0</code></td>
+  <td><code>flox extension install smorin/flox-hello-script</code></td>
+</tr>
+<tr>
+  <td><a href="https://github.com/smorin/flox-hello-binary">smorin/flox-hello-binary</a></td>
+  <td><code>binary</code></td>
+  <td><code>v0.1.0</code> <span class="risk risk-look">macOS only</span></td>
+  <td><code>flox extension install smorin/flox-hello-binary</code></td>
+</tr>
+<tr>
+  <td><a href="https://github.com/smorin/flox-hello-local">smorin/flox-hello-local</a></td>
+  <td><code>local</code></td>
+  <td><code>v0.1.0</code></td>
+  <td><code>flox extension install --from-path .</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2>flox-hello-script</h2>
+
+<div class="repo">
+  <h3><a href="https://github.com/smorin/flox-hello-script">smorin/flox-hello-script</a></h3>
+  <p class="tagline">Canonical script-kind reference extension · installs as
+  <code>hello-script</code></p>
+
+  <table class="tbl">
+  <tbody>
+  <tr><td class="rowhead">Clone</td><td><code>git clone https://github.com/smorin/flox-hello-script.git</code></td></tr>
+  <tr><td class="rowhead">Install</td><td><code>flox extension install smorin/flox-hello-script</code></td></tr>
+  <tr><td class="rowhead">Run</td><td><code>flox hello-script world</code></td></tr>
+  <tr><td class="rowhead">State</td><td>3 commits · tagged <code>v0.1.0</code> · CI workflow only, no release workflow</td></tr>
+  <tr><td class="rowhead">Demonstrates</td><td>Clone-and-run installation, the default <code>Inherit</code> activation mode, and the four <code>FLOX_EXTENSION_*</code> bookkeeping variables</td></tr>
+  </tbody>
+  </table>
+
+  <p>The smallest thing that can be an extension: a three-line manifest and a seven-line bash
+  script. Start here if you are writing your first one.</p>
+
+  <div class="linkrow">
+    <a href="https://github.com/smorin/flox-hello-script/blob/main/flox-extension.toml">flox-extension.toml</a>
+    <a href="https://github.com/smorin/flox-hello-script/blob/main/flox-hello-script">the executable</a>
+    <a href="plugins.html">walkthrough on this site</a>
+  </div>
+</div>
+
+<h2>flox-hello-binary</h2>
+
+<div class="repo">
+  <h3><a href="https://github.com/smorin/flox-hello-binary">smorin/flox-hello-binary</a></h3>
+  <p class="tagline">Canonical binary-kind reference extension · Rust · installs as
+  <code>hello-binary</code></p>
+
+  <table class="tbl">
+  <tbody>
+  <tr><td class="rowhead">Clone</td><td><code>git clone https://github.com/smorin/flox-hello-binary.git</code></td></tr>
+  <tr><td class="rowhead">Install</td><td><code>flox extension install smorin/flox-hello-binary</code></td></tr>
+  <tr><td class="rowhead">Run</td><td><code>flox hello-binary world</code></td></tr>
+  <tr><td class="rowhead">State</td><td>2 commits · tagged <code>v0.1.0</code> · CI and release workflows</td></tr>
+  <tr><td class="rowhead">Assets</td><td><code>flox-hello-binary-macos-aarch64.tar.gz</code><br><code>flox-hello-binary-macos-x86_64.tar.gz</code></td></tr>
+  <tr><td class="rowhead">Demonstrates</td><td>Release-asset resolution, the <code>[extension.binary]</code> manifest stanza, archive extraction, and a tag-triggered matrix build</td></tr>
+  </tbody>
+  </table>
+
+  <div class="callout">
+  <p><strong>Will not install on Linux.</strong> v0.1.0 ships macOS assets only, so on Linux the
+  installer correctly reports <code>no release asset matches</code>. This is scoped, not
+  forgotten — the repo's own <code>PROJECTS.md</code> tracks Linux as <code>P02</code>, and puts
+  Windows out of scope because flox's platform matrix does not include it.</p>
+  </div>
+
+  <div class="linkrow">
+    <a href="https://github.com/smorin/flox-hello-binary/blob/main/flox-extension.toml">flox-extension.toml</a>
+    <a href="https://github.com/smorin/flox-hello-binary/blob/main/.github/workflows/release.yml">release.yml</a>
+    <a href="https://github.com/smorin/flox-hello-binary/releases">releases</a>
+    <a href="https://github.com/smorin/flox-hello-binary/blob/main/PROJECTS.md">PROJECTS.md</a>
+    <a href="plugins.html">walkthrough on this site</a>
+  </div>
+</div>
+
+<h2>flox-hello-local</h2>
+
+<div class="repo">
+  <h3><a href="https://github.com/smorin/flox-hello-local">smorin/flox-hello-local</a></h3>
+  <p class="tagline">Canonical local-authoring reference · installs as <code>hello-local</code></p>
+
+  <table class="tbl">
+  <tbody>
+  <tr><td class="rowhead">Clone</td><td><code>git clone https://github.com/smorin/flox-hello-local.git</code></td></tr>
+  <tr><td class="rowhead">Install</td><td><code>cd flox-hello-local &amp;&amp; flox extension install --from-path .</code></td></tr>
+  <tr><td class="rowhead">Run</td><td><code>flox hello-local world</code></td></tr>
+  <tr><td class="rowhead">State</td><td>2 commits · tagged <code>v0.1.0</code> · CI workflow only</td></tr>
+  <tr><td class="rowhead">Demonstrates</td><td>The <code>--from-path</code> dev loop with GitHub out of the picture at install time</td></tr>
+  </tbody>
+  </table>
+
+  <p>The only one of the three whose install command does not name the repository. You clone it by
+  hand, then point flox at the working tree — which is the whole point.</p>
+
+  <div class="linkrow">
+    <a href="https://github.com/smorin/flox-hello-local/blob/main/flox-extension.toml">flox-extension.toml</a>
+    <a href="https://github.com/smorin/flox-hello-local/blob/main/flox-hello-local">the executable</a>
+    <a href="plugins.html">walkthrough on this site</a>
+  </div>
+</div>
+
+<h2>A fourth repo that does not exist</h2>
+
+<div class="callout">
+<p>The author guide links a fourth example,
+<span class="dead">flox-examples/flox-hello-pinned</span>, described as demonstrating
+<code>mode = "pinned"</code> and <code>[on_active] inside = "error"</code>. No such repository was
+published.</p>
+<p>It matters more than a broken link usually would, because pinned mode is the one genuinely
+novel feature in the whole system — the piece with no <code>gh</code> equivalent — and it is the
+only mode with no working example to copy. Anyone wanting to see it in practice has to read the
+bats tests.</p>
+</div>
+
+<p>Two related inconsistencies in the same docs, worth knowing before you follow a link from
+them: the user guide's quick tour installs from <code>flox-examples/flox-hello-script</code>, and
+the author guide links <code>smorin/flox-hello-script</code>. The repos live under
+<code>smorin</code>; the <code>flox-examples</code> references are left over from the design
+document's original plan and will not resolve. Catalogued with the rest on the
+<a href="risks.html">risks page</a>.</p>
+
+<h2>Upstream and related</h2>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Link</th><th>What it is</th></tr></thead>
+<tbody>
+<tr>
+  <td><a href="https://github.com/flox/flox">flox/flox</a></td>
+  <td>The target repository. The prototype branch is a local branch in a clone of this repo, not a
+  published fork — see the <a href="changes.html">change inventory</a>.</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/cli/cli">cli/cli</a></td>
+  <td>GitHub CLI — the reference implementation being ported. The extension system lives in
+  <code>pkg/cmd/extension/</code> and <code>pkg/extensions/</code>.</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/cli/gh-extension-precompile">cli/gh-extension-precompile</a></td>
+  <td>The GitHub Action that builds and attaches release assets for <code>gh</code> extensions.
+  The model for a <code>flox-extension-precompile</code> that has not been built.</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/topics/flox-extension">github.com/topics/flox-extension</a></td>
+  <td>The discovery surface. <code>flox extension search</code> queries this topic. Tag your repo
+  with it to be findable.</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/topics/gh-extension">github.com/topics/gh-extension</a></td>
+  <td>The equivalent topic for <code>gh</code>, with hundreds of published extensions — the
+  evidence the design document cited that this model works at scale.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<footer class="pagefoot">
+  <span>Repository state as observed on 2026-07-21.</span>
+  <span class="nextprev">
+    <a href="plugins.html">← The three extensions</a>
+    <a href="risks.html">Next: impact and risks →</a>
+  </span>
+</footer>
+
+</div>
+</body>
+</html>

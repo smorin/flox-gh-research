@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Architecture — the flox extension subsystem as built</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;430;500;600&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  color-scheme: light;
+  --clay:    #D97757;
+  --slate:   #141413;
+  --ivory:   #FAF9F5;
+  --oat:     #E3DACC;
+  --white:    #FFFFFF;
+  --gray-100: #F0EEE6;
+  --gray-300: #D1CFC5;
+  --gray-500: #87867F;
+  --gray-700: #3D3D3A;
+  --success: #788C5D;
+  --warning: #C78E3F;
+  --danger:  #B04A4A;
+  --info:    #5C7CA3;
+  --sp-1: 4px;  --sp-2: 8px;
+  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px;
+  --sp-7: 48px; --sp-8: 64px;
+  --r-xs: 4px;  --r-sm: 8px;
+  --r-md: 12px; --r-lg: 20px;
+  --shadow-sm: 0 1px 2px rgba(20,20,19,.06);
+  --shadow-md: 0 4px 10px rgba(20,20,19,.08);
+  --shadow-lg: 0 12px 28px rgba(20,20,19,.12);
+  --ease-out:    cubic-bezier(.16, 1, .3, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --font-sans:  "Geist", "Söhne", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Source Serif 4", "Tiempos", Georgia, serif;
+  --font-mono:  "JetBrains Mono", "Berkeley Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ivory); color: var(--slate); font-family: var(--font-sans); font-size: 16px; font-weight: 430; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+strong { font-weight: 500; color: var(--slate); }
+em { font-style: normal; font-weight: 500; color: var(--slate); }
+a { color: var(--clay); text-decoration: none; border-bottom: 1px solid rgba(217,119,87,.3); }
+a:hover { border-bottom-color: var(--clay); }
+code { font-family: var(--font-mono); font-size: .89em; background: var(--gray-100); padding: 1px 5px; border-radius: var(--r-xs); color: var(--gray-700); }
+.tbl code, pre code { background: none; padding: 0; }
+.nav { background: var(--white); border-bottom: 1px solid var(--gray-300); position: sticky; top: 0; z-index: 20; }
+.nav-inner { max-width: 940px; margin: 0 auto; padding: var(--sp-3) var(--sp-5); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-4); }
+.nav-brand { font-family: var(--font-mono); font-size: 13px; color: var(--gray-500); margin-right: auto; }
+.nav a { font-size: 14px; color: var(--gray-700); border-bottom: 2px solid transparent; padding-bottom: 2px; }
+.nav a:hover { color: var(--slate); border-bottom-color: var(--gray-300); }
+.nav a.here { color: var(--clay); border-bottom-color: var(--clay); }
+.wrap { max-width: 940px; margin: 0 auto; padding: var(--sp-7) var(--sp-5) var(--sp-8); }
+h1 { font-family: var(--font-serif); font-size: 40px; line-height: 1.15; font-weight: 600; margin: 0 0 var(--sp-4); }
+.accent { font-family: var(--font-serif); font-style: italic; color: var(--clay); font-weight: inherit; }
+h2 { font-size: 24px; line-height: 1.3; font-weight: 500; margin: var(--sp-8) 0 var(--sp-4); padding-top: var(--sp-5); border-top: 1px solid var(--gray-300); }
+h3 { font-size: 18px; line-height: 1.35; font-weight: 500; margin: var(--sp-6) 0 var(--sp-3); }
+h4 { font-size: 15px; font-weight: 500; margin: var(--sp-5) 0 var(--sp-2); color: var(--gray-700); }
+p { margin: 0 0 var(--sp-4); }
+ul, ol { margin: 0 0 var(--sp-4); padding-left: var(--sp-5); }
+li { margin-bottom: var(--sp-2); }
+.lede { font-size: 18px; line-height: 1.55; color: var(--gray-700); margin-bottom: var(--sp-5); }
+.kicker { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--gray-500); margin-bottom: var(--sp-2); }
+.callout { background: var(--oat); border-left: 3px solid var(--clay); padding: var(--sp-4) var(--sp-5); border-radius: var(--r-sm); color: var(--gray-700); margin: var(--sp-5) 0; }
+.callout strong { color: var(--slate); }
+.callout p:last-child { margin-bottom: 0; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; margin: var(--sp-4) 0 var(--sp-5); background: var(--white); }
+.tbl th, .tbl td { text-align: left; padding: var(--sp-3); border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+.tbl th { font-weight: 500; color: var(--gray-500); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.tbl tr:hover td { background: var(--gray-100); }
+.tbl td.num { font-family: var(--font-mono); font-size: 13px; color: var(--gray-500); text-align: right; white-space: nowrap; }
+.scroll-x { overflow-x: auto; background: var(--white); border-radius: var(--r-sm); }
+pre.code { background: var(--white); border: 1px solid var(--gray-300); border-radius: var(--r-sm); padding: var(--sp-4); overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; color: var(--gray-700); margin: 0 0 var(--sp-5); }
+.filebar { display: flex; justify-content: space-between; align-items: center; background: var(--gray-100); border: 1px solid var(--gray-300); border-bottom: 0; border-radius: var(--r-sm) var(--r-sm) 0 0; padding: 6px var(--sp-3); font-family: var(--font-mono); font-size: 12px; color: var(--gray-700); margin-top: var(--sp-4); }
+.filebar + pre.code { margin-top: 0; border-radius: 0 0 var(--r-sm) var(--r-sm); }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; line-height: 1.3; white-space: nowrap; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.badge-draft { background: var(--gray-100); color: var(--gray-700); }
+.badge-in-review { background: rgba(92, 124, 163, .14); color: var(--info); }
+.badge-done { background: rgba(120, 140, 93, .16); color: var(--success); }
+.badge-overdue { background: rgba(176, 74, 74, .14); color: var(--danger); }
+.badge-blocked { background: rgba(199, 142, 63, .14); color: var(--warning); }
+.risk { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: var(--r-xs); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; border: 1px solid; white-space: nowrap; }
+.risk-safe { color: var(--success); border-color: rgba(120,140,93,.35); background: rgba(120,140,93,.08); }
+.risk-look { color: var(--warning); border-color: rgba(199,142,63,.35); background: rgba(199,142,63,.08); }
+.risk-attn { color: var(--danger);  border-color: rgba(176,74,74,.35);  background: rgba(176,74,74,.08); }
+.card { background: var(--white); border-radius: var(--r-md); padding: var(--sp-4); transition: box-shadow 200ms var(--ease-out); }
+.card-outlined { border: 1px solid var(--gray-300); }
+.card-stripe { border: 1px solid var(--gray-300); border-left: 3px solid var(--clay); }
+.card-inset { background: var(--gray-100); border: 1px solid var(--gray-100); box-shadow: inset 0 1px 0 rgba(20,20,19,.04); }
+.card h3, .card h4 { margin-top: 0; }
+.card p:last-child, .card ul:last-child { margin-bottom: 0; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+ol.numbered { list-style: none; padding-left: 0; counter-reset: n; }
+ol.numbered > li { counter-increment: n; position: relative; padding-left: var(--sp-7); margin-bottom: var(--sp-4); }
+ol.numbered > li::before { content: counter(n, decimal-leading-zero); position: absolute; left: 0; top: 1px; font-family: var(--font-mono); font-size: 12px; color: var(--clay); }
+.modecard { background: var(--white); border: 1px solid var(--gray-300); border-top: 3px solid var(--clay); border-radius: var(--r-md); padding: var(--sp-4); }
+.modecard .mn { font-family: var(--font-mono); font-size: 13px; color: var(--clay); margin-bottom: var(--sp-2); }
+footer.pagefoot { border-top: 1px solid var(--gray-300); margin-top: var(--sp-8); padding-top: var(--sp-5); font-size: 13px; color: var(--gray-500); display: flex; flex-wrap: wrap; gap: var(--sp-4); justify-content: space-between; }
+.nextprev { display: flex; gap: var(--sp-5); }
+@media (max-width: 640px) {
+  h1 { font-size: 30px; }
+  .wrap { padding: var(--sp-5) var(--sp-4) var(--sp-7); }
+  .nav-inner { padding: var(--sp-3) var(--sp-4); gap: var(--sp-3); }
+  .nav-brand { width: 100%; margin-right: 0; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="nav-inner">
+  <span class="nav-brand">flox extension research</span>
+  <a href="index.html">Overview</a>
+  <a href="research.html">Research</a>
+  <a class="here" href="architecture.html">Architecture</a>
+  <a href="changes.html">Changes</a>
+  <a href="manifest.html">Manifest</a>
+  <a href="plugins.html">Plugins</a>
+  <a href="examples.html">Examples</a>
+  <a href="risks.html">Risks</a>
+</div></nav>
+
+<div class="wrap">
+
+<div class="kicker">flox-gh-plugin · branch smorin/github-extension-prototype</div>
+<h1>What was <span class="accent">actually built</span></h1>
+
+<p class="lede">Nine modules of domain logic, six of command surface, and a two-phase parser trick
+that makes <code>flox anything</code> work without touching the existing parser. This page
+describes the code as it stands, not the design it came from.</p>
+
+<h2>The constraint that shaped everything</h2>
+
+<p><code>PROJECTS.md</code> opens with seven binding design constraints, and they explain most of
+the structural decisions below. The subsystem is <em>purely additive</em>: no refactors of adjacent
+code, no new cross-cutting abstractions, no modifications to <code>flox-activations</code> or
+<code>flox-core</code>, no new environment-variable conventions, and no new dependencies without
+checking <code>Cargo.lock</code> first.</p>
+
+<div class="callout">
+<p><strong>Additive by construction, not by discipline.</strong> The whole subsystem sits behind
+one feature flag, one new variant on the top-level <code>Commands</code> enum, and one arm in the
+dispatch match. During the prototype window the variant carried <code>#[bpaf(hide)]</code>, so a
+build without the flag produced <em>bit-identical</em> help output and behavior to stock flox. The
+GA commit flipped the default and removed the hide attribute in one change.</p>
+</div>
+
+<p>One constraint is worth calling out because it is a real API-design opinion. Adding
+<code>Commands::Extension(...)</code> to the top-level enum touches only the bottom of that enum;
+adding the same commands under an existing group enum would have mutated a structure belonging to
+unrelated commands. The additive change was chosen precisely because it is the one that cannot
+disturb anything else.</p>
+
+<h2>Crate split</h2>
+
+<p>Two homes, following the pattern the flox repo already uses. Command parsing and user-facing
+presentation live in the binary crate; domain logic lives in the SDK, so it is testable without a
+<code>bpaf</code> context and reusable later by FloxHub or the VS Code extension. This mirrors
+<code>gh</code> keeping <code>pkg/extensions/</code> separate from
+<code>pkg/cmd/extension/</code>.</p>
+
+<div class="grid-2">
+<div>
+<div class="filebar"><span>cli/flox-rust-sdk/src/providers/extensions/</span><span>domain</span></div>
+<pre class="code">manager.rs    2,432   install · list · remove · upgrade
+github.rs     1,804   REST, clone, asset resolution
+archive.rs      497   tar/zip extraction + traversal guards
+dispatch.rs     363   find · resolve_mode · env scrubbing
+manifest.rs     204   AuthorManifest + InstalledState
+layout.rs        63   XDG path composition
+mod.rs           61   public re-exports
+reserved.rs      55   built-in command name list
+extension.rs     12   shared types</pre>
+</div>
+<div>
+<div class="filebar"><span>cli/flox/src/commands/extension/</span><span>surface</span></div>
+<pre class="code">mod.rs          341   bpaf enum · dispatch · exec
+search.rs       209   GitHub topic search
+upgrade.rs      163   single + --all + --dry-run
+format.rs       144   table rendering
+install.rs       91   arg handling
+list.rs          32
+remove.rs        27
+
+cli/tests/
+extension.bats  997   integration suite</pre>
+</div>
+</div>
+
+<p>The size distribution is informative. <code>manager.rs</code> and <code>github.rs</code> hold
+four fifths of the logic, which is the shape you would predict: everything hard is either
+orchestrating filesystem mutations safely or negotiating with the GitHub API. The command modules
+are thin because they are supposed to be.</p>
+
+<h2>The two-phase parse</h2>
+
+<p>For <code>flox hello world</code> to reach a <code>flox-hello</code> executable, the parser must
+tolerate a subcommand it does not know. <code>bpaf</code> has no equivalent of clap's
+<code>allow_external_subcommands</code>, and the design document rejected the obvious workaround —
+a catch-all variant using <code>bpaf::any</code> ordered last — because <code>bpaf</code> evaluates
+alternatives left to right and a greedy catch-all would swallow legitimate unknown-flag errors,
+degrading error messages for ordinary typos.</p>
+
+<p>What shipped instead: parse normally, and only on failure ask whether the failure looks like an
+extension invocation.</p>
+
+<div class="filebar"><span>the shape of the fallback in main.rs</span></div>
+<pre class="code">match commands::flox_cli().run_inner(args) {
+    Ok(cmd)  =&gt; run(cmd),
+
+    //  Parse failed. If the first positional is not a flag, this may be
+    //  `flox &lt;extension&gt; …` rather than a typo — try dispatch before
+    //  printing the parser's error.
+    Err(ParseFailure::Stderr(_)) if looks_like_extension(&amp;args) =&gt; {
+        match try_dispatch_external(args) {
+            Some(code) =&gt; code,        // dispatched; never returns on success
+            None       =&gt; print_original_parse_error(),
+        }
+    }
+
+    Err(err) =&gt; { err.print_message(80); ExitCode::from(2) }
+}</pre>
+
+<p>The ordering is the whole point. Built-in parsing is attempted first and its error messages are
+preserved verbatim, so a user who types <code>flox instal</code> still gets the parser's
+suggestion rather than "no extension named instal". Dispatch only runs when the parse already
+failed <em>and</em> the first token does not begin with <code>-</code>, and if no extension
+matches, the original parse error is printed as though the fallback never ran.</p>
+
+<h2>Dispatch, end to end</h2>
+
+<div class="filebar"><span>flox hello world</span></div>
+<pre class="code">flox hello world
+      │
+      ▼
+bpaf parse ──── recognized? ──yes──▶ ordinary command path
+      │ no
+      ▼
+first token starts with '-' ? ──yes──▶ print parse error, exit 2
+      │ no
+      ▼
+dispatch::find("hello")
+      │
+      ├─ $FLOX_DATA_DIR/extensions/flox-hello/flox-hello   ← managed, wins
+      └─ $PATH                                             ← fallback
+      │
+      ├── not found ──▶ print original parse error, exit 2
+      ▼
+read state.toml + flox-extension.toml from the install dir
+      │
+      ▼
+resolve_mode(manifest.environment)
+      │
+   ┌──┴────────────┬──────────────────────┐
+   ▼               ▼                      ▼
+Inherit          None                  Pinned(ref)
+   │               │                      │
+   │               │            already in that env?
+   │               │              ┌───yes─┴──no───┐
+   ▼               ▼              ▼               ▼
+exec as-is    env_clear() +   exec as-is    flox activate -r &lt;ref&gt;
+              replay non-FLOX_              -- flox-hello world
+   │               │              │               │
+   └───────────────┴──────────────┴───────────────┘
+                       │
+          overlay FLOX_EXTENSION_NAME / _VERSION / _PATH / FLOX_BIN
+                       │
+                       ▼
+              execvp(2) — process replaced in place</pre>
+
+<h3>Why managed-directory-first is a decision, not a detail</h3>
+
+<p>The module comment on <code>dispatch.rs</code> states the reasoning directly: the managed
+directory is populated only by <code>flox extension install</code>, so precedence there reflects
+explicit user intent rather than ambient shell state. A stray <code>flox-deploy</code> that happens
+to be on someone's <code>$PATH</code> cannot silently shadow the one they deliberately installed.</p>
+
+<p><code>find</code> also rejects any name that is empty or contains a path separator before it
+composes a path, which forecloses <code>flox ../../something</code> reaching the filesystem.</p>
+
+<h3>The exec is a replacement, not a spawn</h3>
+
+<div class="callout">
+<p><strong>This diverges from the design document, and it is an improvement.</strong> The design
+described spawning a child process with <code>tokio::process::Command</code> and propagating its
+exit code. What shipped calls <code>execvp(2)</code> — the flox process is <em>replaced</em> by
+the extension.</p>
+<p>Signals, exit codes, terminal control, and job control all pass through natively because there
+is no longer a parent to mediate them. The one thing to know when debugging: after
+<code>flox hello</code> dispatches, there is no flox process left to inspect.</p>
+</div>
+
+<h2>The three activation modes</h2>
+
+<p>This is the piece with no <code>gh</code> equivalent. <code>resolve_mode</code> is a pure
+function from the manifest's <code>[environment]</code> stanza to one of three variants, and it is
+deliberately lenient — an unrecognized <code>mode</code> value logs a warning and falls back to
+<code>Inherit</code> rather than failing dispatch, so a manifest written against a future schema
+degrades instead of breaking.</p>
+
+<div class="grid-3">
+  <div class="modecard">
+    <div class="mn">Inherit</div>
+    <h4>The default</h4>
+    <p>Runs inside whatever activation the caller has, or none. Every <code>FLOX_*</code> variable
+    is preserved. Selected when the stanza is absent, when <code>mode = "inherit"</code>, when
+    <code>mode</code> is empty, and as the fallback for any value the parser does not
+    recognize.</p>
+  </div>
+  <div class="modecard">
+    <div class="mn">None</div>
+    <h4>Deliberately blind</h4>
+    <p>Every variable whose name starts with <code>FLOX_</code> or <code>_FLOX_</code> is dropped
+    before exec. For diagnostic tools that must report on flox state without being influenced by
+    it, or auditors that need a clean baseline.</p>
+  </div>
+  <div class="modecard">
+    <div class="mn">Pinned(ref)</div>
+    <h4>Author's environment wins</h4>
+    <p>Wraps the call in <code>flox activate -r &lt;owner&gt;/&lt;env&gt; --</code> unless the
+    caller is already inside that exact environment, in which case it execs directly. Requires a
+    non-empty <code>inherit_name</code>.</p>
+  </div>
+</div>
+
+<h3>Two details in the scrubbing that are easy to get wrong</h3>
+
+<p><strong><code>FLOXHUB_*</code> survives <code>None</code> mode.</strong> The filter matches
+<code>FLOX_</code> and <code>_FLOX_</code> as byte prefixes, which does not match
+<code>FLOXHUB_</code>. The module comment says this is intentional: None mode exists to hide the
+enclosing environment, not to strip FloxHub credentials. An extension in None mode can still
+authenticate.</p>
+
+<p><strong>Bookkeeping variables are overlaid after scrubbing, in all three modes.</strong> An
+extension always receives these four, and the reference extensions read them rather than hardcoding
+their own identity:</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Variable</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td><code>FLOX_EXTENSION_NAME</code></td><td>The extension's declared name.</td></tr>
+<tr><td><code>FLOX_EXTENSION_VERSION</code></td><td>Tag if pinned, else short SHA, else <code>-</code>.</td></tr>
+<tr><td><code>FLOX_EXTENSION_PATH</code></td><td>Absolute path to the install directory.</td></tr>
+<tr><td><code>FLOX_BIN</code></td><td>Path to the flox binary that dispatched it — the analog of <code>gh</code>'s <code>GH_PATH</code>, so extensions can call flox back without <code>$PATH</code> ambiguity.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Where the idempotency check lives, and why</h3>
+
+<p>When an extension pins an environment the caller is already inside, re-activating would be
+wasteful and possibly wrong. That check reads <code>_FLOX_ACTIVE_ENVIRONMENTS</code> and lives on
+the CLI side rather than in <code>resolve_mode</code>. The stated reason is that keeping it out of
+the SDK avoids duplicating the <code>ActiveEnvironments</code> JSON parser — the SDK function stays
+a pure, trivially testable mapping, and the impure lookup happens once at the boundary.</p>
+
+<p>A mismatch — caller inside a <em>different</em> environment than the pinned one — is governed by
+<code>[on_active] inside</code>. The default, <code>"override"</code>, wraps with
+<code>flox activate -r</code> unconditionally. <code>"error"</code> refuses with a
+<code>PinnedEnvMismatch</code> whose message names the exact command needed to trust the
+environment first.</p>
+
+<h2>On-disk layout</h2>
+
+<div class="filebar"><span>$XDG_DATA_HOME/flox/extensions/ · from layout.rs</span></div>
+<pre class="code">&lt;flox.data_dir&gt;/extensions/
+├── .lock                       fslock; serializes install/remove/upgrade
+└── flox-&lt;name&gt;/
+    ├── flox-&lt;name&gt;             executable · file, symlink, or inside a clone
+    ├── state.toml              InstalledState, written by install
+    ├── flox-extension.toml     copy of the author manifest
+    └── .git/                   script and git kinds only</pre>
+
+<p>Four functions, sixty-three lines, and no cleverness: <code>extensions_root</code>,
+<code>install_dir</code>, <code>state_path</code>, <code>lock_path</code>. The name is embedded in
+the directory (<code>flox-hello/</code>) and repeated in the executable
+(<code>flox-hello/flox-hello</code>), which is what makes <code>find</code> a single
+<code>join</code> and a stat rather than a directory scan.</p>
+
+<p>Reads are lock-free; only mutations take <code>.lock</code>. That is safe because
+<code>state.toml</code> writes are atomic via temp-file rename. Note one thing the design document
+specified that was <em>not</em> built: an <code>index.toml</code> caching name to install directory.
+It proved unnecessary once lookup became a single path join.</p>
+
+<div class="callout">
+<p><strong>A lock discipline note from <code>CLAUDE.local.md</code> worth carrying forward.</strong>
+<code>LockGuard</code> is non-reentrant. It must be acquired once at the top of a mutating
+operation, <em>before</em> any kind-dispatch branch — never inside a helper that a branch might call
+twice. This is the sort of constraint that is invisible until it deadlocks.</p>
+</div>
+
+<h2>Install, per kind</h2>
+
+<p>The user never declares a kind. The installer picks by probing, in this order:</p>
+
+<ol class="numbered">
+<li><strong>Normalize the target.</strong> <code>owner/repo</code>, a full URL, or a local path.
+The repo segment is auto-prefixed with <code>flox-</code> when it does not already start with it,
+so <code>acme/hello</code>, <code>acme/flox-hello</code>, and the full URL all resolve
+identically.</li>
+<li><strong>Reject conflicts.</strong> A name colliding with a built-in top-level subcommand is
+refused outright against the list in <code>reserved.rs</code>. An already-installed name is refused
+unless <code>--force</code>.</li>
+<li><strong>Probe for a release asset.</strong> If the latest release (or the pinned tag) has an
+asset matching the host platform, this is a binary-kind install: download, verify sha256, extract
+if archived, <code>chmod +x</code>.</li>
+<li><strong>Otherwise clone.</strong> Script kind: <code>git clone</code> the repo, verify an
+executable <code>flox-&lt;name&gt;</code> exists at the root.</li>
+<li><strong>Or read a local directory.</strong> <code>--from-path</code> skips GitHub entirely and
+symlinks into the working tree.</li>
+</ol>
+
+<h3>Binary asset resolution</h3>
+
+<p>Four strategies tried in order, in <code>github::resolve_asset_for</code>:</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>#</th><th>Strategy</th><th>Detail</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Explicit platform map</td><td><span class="badge badge-draft">reserved, not implemented</span> The code comment marks this slot for a future <code>BinaryMeta.platforms</code>.</td></tr>
+<tr><td>2</td><td>Manifest template, exact match</td><td><code>[extension.binary].asset</code> rendered with <code>{name}</code>, <code>{os}</code>, <code>{arch}</code>, <code>{ext}</code>, then matched by exact asset name.</td></tr>
+<tr><td>3</td><td>Substring match</td><td>Against platform tokens for the host — e.g. Apple Silicon tries <code>darwin-aarch64</code>, <code>darwin-arm64</code>, <code>macos-aarch64</code>, <code>macos-arm64</code>.</td></tr>
+<tr><td>4</td><td>Rosetta fallback</td><td>On Apple Silicon with no arm64 match, retry the x86_64 matchers and log a <code>tracing::info!</code> line noting the fallback.</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Strategy 2 contains a documentation error that strategy 3 conceals. <code>{os}</code> is
+substituted with Rust's raw <code>std::env::consts::OS</code>, which on macOS is
+<code>"macos"</code> — but the author guide tells authors it renders <code>"darwin"</code>. An
+author who follows the guide ships <code>darwin</code>-named assets, fails the exact match, and
+falls through to substring matching, which accepts both. It works, for the wrong reason. Full
+detail on the <a href="manifest.html">manifest page</a>.</p>
+
+<h3>Upgrade, per kind</h3>
+
+<ul>
+<li><strong>Binary</strong> — resolve the latest release; if the tag is unchanged report
+up-to-date, otherwise re-run the install flow into a staging directory and rename atomically.</li>
+<li><strong>Script and git</strong> — fetch the tracked ref and reset hard to it, recording the new
+commit SHA in <code>state.toml</code>. <code>state.toml</code> carries a <code>branch</code> field
+for exactly this: the default branch observed at install time, so upgrade knows what to fetch.</li>
+<li><strong>Local</strong> — refuses. The install is a symlink into a working tree; there is
+nothing to upgrade, and saying so is better than pretending.</li>
+<li><strong>Pinned anything</strong> — skipped with a notice unless <code>--force</code>.</li>
+</ul>
+
+<p><code>--dry-run</code> runs resolution only and prints what would happen. Aligning dry-run output
+with real upgrade output took a dedicated fix (<code>5b9f1817a</code>) for the case where a binary
+extension has no release at all — a reminder that a dry run is only useful if it is honest about
+the failure cases too.</p>
+
+<h2>Command surface</h2>
+
+<p>Five verbs shipped, not the four in the design document — <code>search</code> was pulled forward
+from v2.</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Command</th><th>Notable flags</th><th>Behavior</th></tr></thead>
+<tbody>
+<tr><td><code>flox extension install</code></td><td><code>--pin</code> <code>--force</code> <code>--from-path</code></td><td>Kind selected by probing. <code>--pin</code> takes a tag or commit.</td></tr>
+<tr><td><code>flox extension list</code></td><td>—</td><td>Reads every <code>state.toml</code>. Version column shows tag, else short SHA, else <code>-</code>.</td></tr>
+<tr><td><code>flox extension remove</code></td><td>—</td><td>Deletes the install directory and everything in it.</td></tr>
+<tr><td><code>flox extension upgrade</code></td><td><code>--all</code> <code>--dry-run</code> <code>--force</code></td><td>Per-kind strategy; pinned skipped; one result row each.</td></tr>
+<tr><td><code>flox extension search</code></td><td>—</td><td>Queries the <code>flox-extension</code> GitHub topic.</td></tr>
+<tr><td><code>flox &lt;name&gt; …</code></td><td>—</td><td>The dispatch fallback. Arguments forwarded untouched.</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Two environment variables extend reach without adding CLI surface.
+<code>FLOX_EXTENSIONS_GITHUB_BASE_URL</code> and <code>FLOX_EXTENSIONS_GITHUB_CLONE_HOST</code>
+together point the subsystem at a GitHub Enterprise host — the first for metadata, the second for
+assembling clone URLs. They double as the test seam: the unit suite points them at an
+<code>httpmock</code> server.</p>
+
+<h2>Testing</h2>
+
+<div class="grid-3">
+  <div class="card card-outlined">
+    <h4>Unit</h4>
+    <p>Inline <code>#[cfg(test)]</code> per module. Manifest round-trips, path composition, the
+    <code>resolve_mode</code> truth table, and asset resolution against canned release JSON.</p>
+  </div>
+  <div class="card card-outlined">
+    <h4>Mocked HTTP</h4>
+    <p><code>httpmock</code> plus the base-URL override, wrapped in
+    <code>temp_env::async_with_vars</code> so the override is scoped to the test rather than
+    leaking across the suite.</p>
+  </div>
+  <div class="card card-outlined">
+    <h4>Integration</h4>
+    <p>997 lines of bats covering install from every source, pinning, upgrade, all three activation
+    modes, and a gh-parity smoke block translated from <code>gh</code>'s own tests.</p>
+  </div>
+</div>
+
+<h3>The fake-GitHub fixture</h3>
+
+<p>The bats suite needs a GitHub that is not GitHub. The technique, from
+<code>extension.bats::_setup_github_fixture</code>: run a Python <code>http.server</code> on a
+random port for the API, and redirect clone traffic to a local bare repository using git's
+<code>insteadOf</code> rewriting — injected per-process through
+<code>GIT_CONFIG_COUNT</code> and <code>GIT_CONFIG_KEY_&lt;n&gt;</code> environment variables
+rather than <code>git config --global</code>, because the bats suite shares one global config and
+parallel files would contend on it.</p>
+
+<p>That constraint has teeth elsewhere too: only coreutils and gnutar are on <code>PATH</code>
+inside bats, so archive fixtures are built with <code>python3 -c 'import tarfile; …'</code> rather
+than by shelling out to <code>gzip</code> or <code>curl</code>, which are simply absent.</p>
+
+<footer class="pagefoot">
+  <span>Source: <code>cli/flox-rust-sdk/src/providers/extensions/</code> and <code>cli/flox/src/commands/extension/</code></span>
+  <span class="nextprev">
+    <a href="research.html">← The design document</a>
+    <a href="manifest.html">Next: the manifest →</a>
+  </span>
+</footer>
+
+</div>
+</body>
+</html>

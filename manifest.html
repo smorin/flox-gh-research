@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>flox-extension.toml — the author's contract</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;430;500;600&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  color-scheme: light;
+  --clay:    #D97757;
+  --slate:   #141413;
+  --ivory:   #FAF9F5;
+  --oat:     #E3DACC;
+  --white:    #FFFFFF;
+  --gray-100: #F0EEE6;
+  --gray-300: #D1CFC5;
+  --gray-500: #87867F;
+  --gray-700: #3D3D3A;
+  --success: #788C5D;
+  --warning: #C78E3F;
+  --danger:  #B04A4A;
+  --info:    #5C7CA3;
+  --sp-1: 4px;  --sp-2: 8px;
+  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px;
+  --sp-7: 48px; --sp-8: 64px;
+  --r-xs: 4px;  --r-sm: 8px;
+  --r-md: 12px; --r-lg: 20px;
+  --shadow-sm: 0 1px 2px rgba(20,20,19,.06);
+  --shadow-md: 0 4px 10px rgba(20,20,19,.08);
+  --shadow-lg: 0 12px 28px rgba(20,20,19,.12);
+  --ease-out:    cubic-bezier(.16, 1, .3, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --font-sans:  "Geist", "Söhne", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Source Serif 4", "Tiempos", Georgia, serif;
+  --font-mono:  "JetBrains Mono", "Berkeley Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ivory); color: var(--slate); font-family: var(--font-sans); font-size: 16px; font-weight: 430; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+strong { font-weight: 500; color: var(--slate); }
+em { font-style: normal; font-weight: 500; color: var(--slate); }
+a { color: var(--clay); text-decoration: none; border-bottom: 1px solid rgba(217,119,87,.3); }
+a:hover { border-bottom-color: var(--clay); }
+code { font-family: var(--font-mono); font-size: .89em; background: var(--gray-100); padding: 1px 5px; border-radius: var(--r-xs); color: var(--gray-700); }
+.tbl code, pre code { background: none; padding: 0; }
+.nav { background: var(--white); border-bottom: 1px solid var(--gray-300); position: sticky; top: 0; z-index: 20; }
+.nav-inner { max-width: 940px; margin: 0 auto; padding: var(--sp-3) var(--sp-5); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-4); }
+.nav-brand { font-family: var(--font-mono); font-size: 13px; color: var(--gray-500); margin-right: auto; }
+.nav a { font-size: 14px; color: var(--gray-700); border-bottom: 2px solid transparent; padding-bottom: 2px; }
+.nav a:hover { color: var(--slate); border-bottom-color: var(--gray-300); }
+.nav a.here { color: var(--clay); border-bottom-color: var(--clay); }
+.wrap { max-width: 940px; margin: 0 auto; padding: var(--sp-7) var(--sp-5) var(--sp-8); }
+h1 { font-family: var(--font-serif); font-size: 40px; line-height: 1.15; font-weight: 600; margin: 0 0 var(--sp-4); }
+.accent { font-family: var(--font-serif); font-style: italic; color: var(--clay); font-weight: inherit; }
+h2 { font-size: 24px; line-height: 1.3; font-weight: 500; margin: var(--sp-8) 0 var(--sp-4); padding-top: var(--sp-5); border-top: 1px solid var(--gray-300); }
+h3 { font-size: 18px; line-height: 1.35; font-weight: 500; margin: var(--sp-6) 0 var(--sp-3); }
+h4 { font-size: 15px; font-weight: 500; margin: var(--sp-5) 0 var(--sp-2); color: var(--gray-700); }
+p { margin: 0 0 var(--sp-4); }
+ul, ol { margin: 0 0 var(--sp-4); padding-left: var(--sp-5); }
+li { margin-bottom: var(--sp-2); }
+.lede { font-size: 18px; line-height: 1.55; color: var(--gray-700); margin-bottom: var(--sp-5); }
+.kicker { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--gray-500); margin-bottom: var(--sp-2); }
+.callout { background: var(--oat); border-left: 3px solid var(--clay); padding: var(--sp-4) var(--sp-5); border-radius: var(--r-sm); color: var(--gray-700); margin: var(--sp-5) 0; }
+.callout strong { color: var(--slate); }
+.callout p:last-child { margin-bottom: 0; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; margin: var(--sp-4) 0 var(--sp-5); background: var(--white); }
+.tbl th, .tbl td { text-align: left; padding: var(--sp-3); border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+.tbl th { font-weight: 500; color: var(--gray-500); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.tbl tr:hover td { background: var(--gray-100); }
+.scroll-x { overflow-x: auto; background: var(--white); border-radius: var(--r-sm); }
+pre.code { background: var(--white); border: 1px solid var(--gray-300); border-radius: var(--r-sm); padding: var(--sp-4); overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; color: var(--gray-700); margin: 0 0 var(--sp-5); }
+.filebar { display: flex; justify-content: space-between; align-items: center; background: var(--gray-100); border: 1px solid var(--gray-300); border-bottom: 0; border-radius: var(--r-sm) var(--r-sm) 0 0; padding: 6px var(--sp-3); font-family: var(--font-mono); font-size: 12px; color: var(--gray-700); margin-top: var(--sp-4); }
+.filebar + pre.code { margin-top: 0; border-radius: 0 0 var(--r-sm) var(--r-sm); }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; line-height: 1.3; white-space: nowrap; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.badge-draft { background: var(--gray-100); color: var(--gray-700); }
+.badge-in-review { background: rgba(92, 124, 163, .14); color: var(--info); }
+.badge-done { background: rgba(120, 140, 93, .16); color: var(--success); }
+.badge-overdue { background: rgba(176, 74, 74, .14); color: var(--danger); }
+.badge-blocked { background: rgba(199, 142, 63, .14); color: var(--warning); }
+.risk { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: var(--r-xs); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; border: 1px solid; white-space: nowrap; }
+.risk-safe { color: var(--success); border-color: rgba(120,140,93,.35); background: rgba(120,140,93,.08); }
+.risk-look { color: var(--warning); border-color: rgba(199,142,63,.35); background: rgba(199,142,63,.08); }
+.risk-attn { color: var(--danger);  border-color: rgba(176,74,74,.35);  background: rgba(176,74,74,.08); }
+.card { background: var(--white); border-radius: var(--r-md); padding: var(--sp-4); transition: box-shadow 200ms var(--ease-out); }
+.card-outlined { border: 1px solid var(--gray-300); }
+.card-stripe { border: 1px solid var(--gray-300); border-left: 3px solid var(--clay); }
+.card-inset { background: var(--gray-100); border: 1px solid var(--gray-100); box-shadow: inset 0 1px 0 rgba(20,20,19,.04); }
+.card h3, .card h4 { margin-top: 0; }
+.card p:last-child, .card ul:last-child { margin-bottom: 0; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+.req { font-family: var(--font-mono); font-size: 11px; color: var(--clay); }
+.opt { font-family: var(--font-mono); font-size: 11px; color: var(--gray-500); }
+footer.pagefoot { border-top: 1px solid var(--gray-300); margin-top: var(--sp-8); padding-top: var(--sp-5); font-size: 13px; color: var(--gray-500); display: flex; flex-wrap: wrap; gap: var(--sp-4); justify-content: space-between; }
+.nextprev { display: flex; gap: var(--sp-5); }
+@media (max-width: 640px) {
+  h1 { font-size: 30px; }
+  .wrap { padding: var(--sp-5) var(--sp-4) var(--sp-7); }
+  .nav-inner { padding: var(--sp-3) var(--sp-4); gap: var(--sp-3); }
+  .nav-brand { width: 100%; margin-right: 0; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="nav-inner">
+  <span class="nav-brand">flox extension research</span>
+  <a href="index.html">Overview</a>
+  <a href="research.html">Research</a>
+  <a href="architecture.html">Architecture</a>
+  <a href="changes.html">Changes</a>
+  <a class="here" href="manifest.html">Manifest</a>
+  <a href="plugins.html">Plugins</a>
+  <a href="examples.html">Examples</a>
+  <a href="risks.html">Risks</a>
+</div></nav>
+
+<div class="wrap">
+
+<div class="kicker">flox-extension.toml · schema "1"</div>
+<h1>The author's <span class="accent">contract</span></h1>
+
+<p class="lede">One optional TOML file at the repo root is the entire surface an extension author
+declares. This is every field it can hold, why each exists, and the three places the shipped schema
+parted ways with the one that was designed.</p>
+
+<h2>Why the file exists at all</h2>
+
+<p>An extension can work without it. The name is derivable from the repository
+(<code>flox-hello</code> becomes the <code>hello</code> extension), the kind is inferred by probing
+for release assets, and the default activation behavior needs no declaration. Two of the three
+reference extensions ship manifests of four lines.</p>
+
+<p>The manifest earns its place in exactly two situations:</p>
+
+<div class="grid-2">
+  <div class="card card-stripe">
+    <h4>Binary extensions need it</h4>
+    <p>Release assets have names, and flox has to guess one. The manifest lets an author state the
+    naming scheme rather than hope the substring matcher finds the right file. This is the only
+    case the author guide calls <em>required</em>.</p>
+  </div>
+  <div class="card card-stripe">
+    <h4>Environment behavior needs it</h4>
+    <p>The <code>[environment]</code> stanza is the one thing that cannot be inferred from repo
+    shape. An extension that must run inside a particular flox environment has no way to say so
+    except here.</p>
+  </div>
+</div>
+
+<h2>The minimal manifest</h2>
+
+<div class="filebar"><span>flox-extension.toml</span><span>the whole thing</span></div>
+<pre class="code">schema = "1"
+
+[extension]
+name = "hello"</pre>
+
+<p>And in practice, even <code>schema</code> gets omitted — it has a serde default of
+<code>"1"</code>, and two of the three reference extensions leave it out. Whether that is
+pragmatism or a schema-versioning discipline already eroding is discussed
+<a href="#drift">below</a>.</p>
+
+<h2>The full manifest</h2>
+
+<div class="filebar"><span>flox-extension.toml</span><span>every field the parser accepts</span></div>
+<pre class="code">schema = "1"
+
+[extension]
+name        = "deploy"
+description = "Deploys things"
+
+[extension.binary]
+source = "github-release"
+asset  = "flox-deploy-{os}-{arch}.tar.gz"
+sha256 = "cafe..."
+
+[environment]
+mode         = "pinned"
+inherit_name = "flox-examples/dev"
+
+[on_active]
+inside = "error"</pre>
+
+<h3><code>[extension]</code></h3>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Field</th><th>Type</th><th></th><th>What it does and why</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>name</code></td><td>string</td><td><span class="req">required</span></td>
+  <td>The extension name, without the <code>flox-</code> prefix. Must match the repo's
+  <code>&lt;name&gt;</code> segment. Lowercase, matching
+  <code>[a-z0-9][a-z0-9_-]*</code>. This is what the user types after <code>flox</code>, and what
+  the installer checks against the reserved-name list.</td>
+</tr>
+<tr>
+  <td><code>description</code></td><td>string</td><td><span class="opt">optional</span></td>
+  <td>Short human description, surfaced in <code>list</code> and <code>search</code> output. Purely
+  presentational — nothing branches on it.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3><code>[extension.binary]</code></h3>
+
+<p>Present only for binary-kind extensions. Its absence is not a declaration that the extension is
+not binary — kind is still inferred by probing for release assets — but without it the installer
+has only substring matching to work with.</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Field</th><th>Type</th><th></th><th>What it does and why</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>source</code></td><td>string</td><td><span class="req">required</span></td>
+  <td>Only <code>"github-release"</code> is accepted today. It exists as a field rather than an
+  assumption so that a future FloxHub or direct-URL source can be added without a schema bump —
+  the same forward-compatibility move as <code>state.toml</code>'s <code>source</code>
+  discriminant.</td>
+</tr>
+<tr>
+  <td><code>asset</code></td><td>string</td><td><span class="req">required</span></td>
+  <td>Asset-name template. Placeholders <code>{name}</code>, <code>{os}</code>,
+  <code>{arch}</code>, and <code>{ext}</code> are expanded, then matched against release asset names
+  <em>exactly</em>. Read the placeholder note below before writing one.</td>
+</tr>
+<tr>
+  <td><code>sha256</code></td><td>string</td><td><span class="opt">optional</span></td>
+  <td>Documented as "reserved for future verification." Note that this is <em>not</em> the digest
+  that gets verified at install time — see the verification note below, which is a genuine subtlety.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4>The placeholder that does not do what the docs say</h4>
+
+<div class="callout">
+<p><strong>The author guide states <code>{os}</code> renders as <code>"darwin"</code>,
+<code>"linux"</code>, or <code>"windows"</code>. It does not.</strong>
+<code>render_asset_template</code> substitutes Rust's raw <code>std::env::consts::OS</code>, which
+is <code>"macos"</code> on macOS. Only <code>{ext}</code> is computed — <code>"zip"</code> on
+Windows, <code>"tar.gz"</code> everywhere else.</p>
+<p>The <code>flox-hello-binary</code> reference repo is correct and the documentation is wrong: its
+assets are named <code>flox-hello-binary-macos-aarch64.tar.gz</code>, which is exactly what the
+template renders.</p>
+<p>What makes this hard to notice is that following the incorrect documentation still works. An
+author who ships <code>...-darwin-aarch64.tar.gz</code> fails the exact template match, falls
+through to substring matching — which accepts <code>darwin</code> <em>and</em> <code>macos</code> —
+and installs successfully. A wrong doc, masked by a forgiving fallback, is the kind that survives
+for years.</p>
+</div>
+
+<h4>What sha256 actually verifies</h4>
+
+<p>Commit <code>f692e3016</code> added digest verification, and the distinction matters. The
+digest checked at install time is the one <em>GitHub advertises for the release asset</em>, compared
+against what was actually downloaded — it detects a corrupted or truncated transfer. The
+<code>sha256</code> field in your manifest is not that check. Do not treat a manifest digest as a
+supply-chain guarantee; see the <a href="risks.html">risks page</a> for what the trust model does
+and does not cover.</p>
+
+<h3><code>[environment]</code></h3>
+
+<p>The stanza with no <code>gh</code> equivalent. Omit it entirely and you get
+<code>inherit</code>, which is right for most extensions.</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Field</th><th>Type</th><th></th><th>What it does and why</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>mode</code></td><td>string</td><td><span class="req">required</span></td>
+  <td>One of <code>"inherit"</code>, <code>"none"</code>, <code>"pinned"</code>. Anything else logs
+  a warning and degrades to <code>inherit</code> rather than failing dispatch, so a manifest
+  written against a future schema does not break on an older flox.</td>
+</tr>
+<tr>
+  <td><code>inherit_name</code></td><td>string</td><td><span class="opt">required when pinned</span></td>
+  <td>An <code>&lt;owner&gt;/&lt;environment&gt;</code> reference valid for
+  <code>flox activate -r</code>. If <code>mode = "pinned"</code> and this is missing or empty, flox
+  warns and falls back to <code>inherit</code> — a malformed manifest degrades rather than hard-failing.</td>
+</tr>
+<tr>
+  <td><code>inherit</code></td><td>enum</td><td><span class="opt">inert</span></td>
+  <td>Accepts <code>"current"</code>, <code>"default"</code>, <code>"named"</code>. Parsed,
+  round-tripped, and <em>never read</em>. The author guide documents it honestly as "reserved for
+  future use; not consumed by flox today."</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4>The three modes, in one table</h4>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Mode</th><th>What happens at dispatch</th><th>Reach for it when</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>inherit</code><br><span class="opt">default</span></td>
+  <td>Exec directly. Every <code>FLOX_*</code> variable the caller had is preserved.</td>
+  <td>Almost always. The extension behaves like any other command run at the prompt.</td>
+</tr>
+<tr>
+  <td><code>none</code></td>
+  <td><code>env_clear()</code>, replay every non-<code>FLOX_</code> variable, then overlay the four
+  bookkeeping vars. <code>FLOXHUB_*</code> deliberately survives.</td>
+  <td>The extension must not be influenced by caller-side flox state — a diagnostic that reports on
+  flox itself, or an auditor needing a clean baseline.</td>
+</tr>
+<tr>
+  <td><code>pinned</code></td>
+  <td>Already inside that environment? Exec directly. Otherwise wrap with
+  <code>flox activate -r &lt;ref&gt; -- &lt;ext&gt;</code>.</td>
+  <td>The extension genuinely cannot run without specific tooling — a deploy script that needs the
+  team's toolchain, whatever the user happens to have active.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3><code>[on_active]</code></h3>
+
+<p>A separate top-level table, not nested under <code>[environment]</code>, governing one narrow
+question: what to do when <code>mode = "pinned"</code> and the caller is already activated in a
+<em>different</em> environment.</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Field</th><th>Values</th><th>Behavior</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>inside</code></td>
+  <td><code>"override"</code> <span class="opt">default</span></td>
+  <td>Wrap with <code>flox activate -r</code> unconditionally. The author pinned an environment
+  because the extension needs it; falling through to the user's would be a footgun.</td>
+</tr>
+<tr>
+  <td></td>
+  <td><code>"error"</code></td>
+  <td>Refuse with <code>PinnedEnvMismatch</code>, whose message names the exact
+  <code>flox activate -r &lt;ref&gt; --trust</code> command needed to proceed.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3><code>schema</code></h3>
+
+<p>Always the string <code>"1"</code>. Deliberately <em>not</em> the type-state
+<code>Manifest&lt;S&gt;</code> pattern that <code>flox-manifest</code> uses for environment
+manifests — the module comment gives the reason plainly: there is one schema version and no
+migration history, so the machinery would be cost without benefit.</p>
+
+<h2>state.toml — the other half</h2>
+
+<p>Where <code>flox-extension.toml</code> is authored and committed, <code>state.toml</code> is
+written by the installer into the install directory and read by <code>list</code>,
+<code>remove</code>, and <code>upgrade</code>. Users are not meant to edit it.</p>
+
+<div class="filebar"><span>~/.local/share/flox/extensions/flox-hello/state.toml</span></div>
+<pre class="code">schema       = "1"
+name         = "hello"
+kind         = "script"        # script | binary | local
+source       = "github"        # github | .           ← the future-FloxHub discriminant
+owner        = "smorin"
+repo         = "flox-hello-script"
+host         = "github.com"    # supports GitHub Enterprise
+tag          = ""              # release tag, for binary kind
+branch       = "main"          # default branch at install time; upgrade fetches this
+commit       = "c8d5f41..."    # resolved SHA, for script/git kinds
+pinned       = false           # true when installed with --pin
+asset_sha256 = ""              # recorded for binary kind
+installed_at = "2026-04-17T12:34:56Z"
+path         = "/home/me/.local/share/flox/extensions/flox-hello/flox-hello"</pre>
+
+<h3>Why the split is the right call</h3>
+
+<p><code>gh</code> conflates these: a single <code>manifest.yml</code> holds
+<code>owner</code>, <code>name</code>, <code>host</code>, <code>tag</code>,
+<code>ispinned</code>, and <code>path</code>, all machine-written. The design document splits the
+roles explicitly and gives three reasons — the rest of the flox ecosystem is TOML, flox already
+depends on <code>toml</code> and <code>toml_edit</code>, and <code>gh</code>'s file is internal
+state rather than an author-facing surface, so conflating them was never really a design choice
+in the first place.</p>
+
+<p>The practical payoff is that the author-facing schema can stay tiny and stable while the
+internal record grows whatever fields the installer needs. <code>branch</code> is the proof: it was
+added because upgrade needs to know which ref to fetch, and it cost authors nothing.</p>
+
+<h2 id="drift">Designed versus shipped</h2>
+
+<p>The design document specified a manifest schema in detail. The shipped one is different in
+almost every particular. This is not a defect — the document explicitly pre-authorized it — but
+anyone reading the design document as documentation will write manifests that do not parse.</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Aspect</th><th>Designed</th><th>Shipped</th><th></th></tr></thead>
+<tbody>
+<tr>
+  <td><code>schema</code> type</td>
+  <td><code>schema = 1</code> <span class="opt">integer</span></td>
+  <td><code>schema = "1"</code> <span class="opt">string</span></td>
+  <td><span class="risk risk-look">breaks parse</span></td>
+</tr>
+<tr>
+  <td>Binary block</td>
+  <td><code>asset_template</code> plus an explicit
+  <code>[extension.binary.platforms]</code> map</td>
+  <td><code>source</code> + <code>asset</code> + <code>sha256</code>; the platforms map is a
+  reserved comment slot in <code>resolve_asset_for</code></td>
+  <td><span class="risk risk-look">renamed</span></td>
+</tr>
+<tr>
+  <td>Environment block</td>
+  <td><code>inherit = "inherit"|"none"|"pinned"</code>, <code>ref</code>, and
+  <code>on_active</code> all inline in <code>[environment]</code></td>
+  <td><code>mode</code> + <code>inherit_name</code>, with <code>on_active</code> promoted to its own
+  top-level table</td>
+  <td><span class="risk risk-look">restructured</span></td>
+</tr>
+<tr>
+  <td><code>kind</code> field</td>
+  <td>Author-declarable: <code>"script"</code>, <code>"binary"</code>, <code>"git"</code></td>
+  <td>Does not exist. Kind is always inferred by probing.</td>
+  <td><span class="risk risk-safe">simplified</span></td>
+</tr>
+<tr>
+  <td>Metadata fields</td>
+  <td><code>version</code>, <code>license</code>, <code>homepage</code></td>
+  <td>None of them. <code>ExtensionMeta</code> holds <code>name</code>,
+  <code>description</code>, <code>binary</code>.</td>
+  <td><span class="risk risk-safe">cut</span></td>
+</tr>
+<tr>
+  <td>Local install</td>
+  <td><code>flox extension install .</code></td>
+  <td><code>flox extension install --from-path .</code></td>
+  <td><span class="risk risk-look">renamed</span></td>
+</tr>
+<tr>
+  <td><code>index.toml</code></td>
+  <td>An optional name-to-directory cache at the extensions root</td>
+  <td>Not built — lookup is a single path join, so a cache earned nothing</td>
+  <td><span class="risk risk-safe">dropped</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>Reading the drift</h3>
+
+<p>Three of these are unambiguous improvements. Dropping the author-declarable <code>kind</code>
+removes a field that could contradict reality — a repo declaring <code>kind = "binary"</code> with
+no release assets would be a lie the installer had to reconcile. Cutting
+<code>version</code>, <code>license</code>, and <code>homepage</code> removes three fields that
+duplicate what GitHub already knows and nothing branched on. Dropping <code>index.toml</code>
+removes a cache with no measured benefit.</p>
+
+<p>The renames are the ones that cost something. <code>inherit</code> became <code>mode</code>
+while a <em>different</em> field named <code>inherit</code> was introduced with unrelated
+semantics and then never read — so the design document and the shipped schema both have a field
+called <code>inherit</code>, meaning different things, one of them inert. That is the single most
+confusing artifact of the drift, and it is the reason the author guide has to spend a table row
+telling readers a documented field does nothing.</p>
+
+<div class="callout">
+<p><strong>For a maintainer, the practical consequence:</strong> the design document is a reliable
+guide to <em>intent</em> and an unreliable guide to <em>syntax</em>. When the two disagree about a
+field name or type, the code is authoritative — which is exactly what the document's own Appendix A
+asked for.</p>
+</div>
+
+<footer class="pagefoot">
+  <span>Sources: <code>providers/extensions/manifest.rs</code>, <code>docs/extensions/author-guide.md</code></span>
+  <span class="nextprev">
+    <a href="architecture.html">← Architecture</a>
+    <a href="plugins.html">Next: the three extensions →</a>
+  </span>
+</footer>
+
+</div>
+</body>
+</html>

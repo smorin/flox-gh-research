@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>The three reference extensions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;430;500;600&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  color-scheme: light;
+  --clay:    #D97757;
+  --slate:   #141413;
+  --ivory:   #FAF9F5;
+  --oat:     #E3DACC;
+  --white:    #FFFFFF;
+  --gray-100: #F0EEE6;
+  --gray-300: #D1CFC5;
+  --gray-500: #87867F;
+  --gray-700: #3D3D3A;
+  --success: #788C5D;
+  --warning: #C78E3F;
+  --danger:  #B04A4A;
+  --info:    #5C7CA3;
+  --sp-1: 4px;  --sp-2: 8px;
+  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px;
+  --sp-7: 48px; --sp-8: 64px;
+  --r-xs: 4px;  --r-sm: 8px;
+  --r-md: 12px; --r-lg: 20px;
+  --shadow-sm: 0 1px 2px rgba(20,20,19,.06);
+  --shadow-md: 0 4px 10px rgba(20,20,19,.08);
+  --shadow-lg: 0 12px 28px rgba(20,20,19,.12);
+  --ease-out:    cubic-bezier(.16, 1, .3, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --font-sans:  "Geist", "Söhne", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Source Serif 4", "Tiempos", Georgia, serif;
+  --font-mono:  "JetBrains Mono", "Berkeley Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ivory); color: var(--slate); font-family: var(--font-sans); font-size: 16px; font-weight: 430; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+strong { font-weight: 500; color: var(--slate); }
+em { font-style: normal; font-weight: 500; color: var(--slate); }
+a { color: var(--clay); text-decoration: none; border-bottom: 1px solid rgba(217,119,87,.3); }
+a:hover { border-bottom-color: var(--clay); }
+code { font-family: var(--font-mono); font-size: .89em; background: var(--gray-100); padding: 1px 5px; border-radius: var(--r-xs); color: var(--gray-700); }
+.tbl code, pre code { background: none; padding: 0; }
+.nav { background: var(--white); border-bottom: 1px solid var(--gray-300); position: sticky; top: 0; z-index: 20; }
+.nav-inner { max-width: 940px; margin: 0 auto; padding: var(--sp-3) var(--sp-5); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-4); }
+.nav-brand { font-family: var(--font-mono); font-size: 13px; color: var(--gray-500); margin-right: auto; }
+.nav a { font-size: 14px; color: var(--gray-700); border-bottom: 2px solid transparent; padding-bottom: 2px; }
+.nav a:hover { color: var(--slate); border-bottom-color: var(--gray-300); }
+.nav a.here { color: var(--clay); border-bottom-color: var(--clay); }
+.wrap { max-width: 940px; margin: 0 auto; padding: var(--sp-7) var(--sp-5) var(--sp-8); }
+h1 { font-family: var(--font-serif); font-size: 40px; line-height: 1.15; font-weight: 600; margin: 0 0 var(--sp-4); }
+.accent { font-family: var(--font-serif); font-style: italic; color: var(--clay); font-weight: inherit; }
+h2 { font-size: 24px; line-height: 1.3; font-weight: 500; margin: var(--sp-8) 0 var(--sp-4); padding-top: var(--sp-5); border-top: 1px solid var(--gray-300); }
+h3 { font-size: 18px; line-height: 1.35; font-weight: 500; margin: var(--sp-6) 0 var(--sp-3); }
+h4 { font-size: 15px; font-weight: 500; margin: var(--sp-5) 0 var(--sp-2); color: var(--gray-700); }
+p { margin: 0 0 var(--sp-4); }
+ul, ol { margin: 0 0 var(--sp-4); padding-left: var(--sp-5); }
+li { margin-bottom: var(--sp-2); }
+.lede { font-size: 18px; line-height: 1.55; color: var(--gray-700); margin-bottom: var(--sp-5); }
+.kicker { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--gray-500); margin-bottom: var(--sp-2); }
+.callout { background: var(--oat); border-left: 3px solid var(--clay); padding: var(--sp-4) var(--sp-5); border-radius: var(--r-sm); color: var(--gray-700); margin: var(--sp-5) 0; }
+.callout strong { color: var(--slate); }
+.callout p:last-child { margin-bottom: 0; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; margin: var(--sp-4) 0 var(--sp-5); background: var(--white); }
+.tbl th, .tbl td { text-align: left; padding: var(--sp-3); border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+.tbl th { font-weight: 500; color: var(--gray-500); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.tbl tr:hover td { background: var(--gray-100); }
+.tbl th.rowhead, .tbl td.rowhead { color: var(--gray-500); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; font-weight: 500; white-space: nowrap; }
+.scroll-x { overflow-x: auto; background: var(--white); border-radius: var(--r-sm); }
+pre.code { background: var(--white); border: 1px solid var(--gray-300); border-radius: var(--r-sm); padding: var(--sp-4); overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; color: var(--gray-700); margin: 0 0 var(--sp-5); }
+.filebar { display: flex; justify-content: space-between; align-items: center; background: var(--gray-100); border: 1px solid var(--gray-300); border-bottom: 0; border-radius: var(--r-sm) var(--r-sm) 0 0; padding: 6px var(--sp-3); font-family: var(--font-mono); font-size: 12px; color: var(--gray-700); margin-top: var(--sp-4); }
+.filebar + pre.code { margin-top: 0; border-radius: 0 0 var(--r-sm) var(--r-sm); }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; line-height: 1.3; white-space: nowrap; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.badge-draft { background: var(--gray-100); color: var(--gray-700); }
+.badge-in-review { background: rgba(92, 124, 163, .14); color: var(--info); }
+.badge-done { background: rgba(120, 140, 93, .16); color: var(--success); }
+.badge-overdue { background: rgba(176, 74, 74, .14); color: var(--danger); }
+.badge-blocked { background: rgba(199, 142, 63, .14); color: var(--warning); }
+.risk { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: var(--r-xs); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; border: 1px solid; white-space: nowrap; }
+.risk-safe { color: var(--success); border-color: rgba(120,140,93,.35); background: rgba(120,140,93,.08); }
+.risk-look { color: var(--warning); border-color: rgba(199,142,63,.35); background: rgba(199,142,63,.08); }
+.risk-attn { color: var(--danger);  border-color: rgba(176,74,74,.35);  background: rgba(176,74,74,.08); }
+.card { background: var(--white); border-radius: var(--r-md); padding: var(--sp-4); transition: box-shadow 200ms var(--ease-out); }
+.card-outlined { border: 1px solid var(--gray-300); }
+.card-stripe { border: 1px solid var(--gray-300); border-left: 3px solid var(--clay); }
+.card-inset { background: var(--gray-100); border: 1px solid var(--gray-100); box-shadow: inset 0 1px 0 rgba(20,20,19,.04); }
+.card h3, .card h4 { margin-top: 0; }
+.card p:last-child, .card ul:last-child { margin-bottom: 0; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+.repohead { background: var(--white); border: 1px solid var(--gray-300); border-left: 3px solid var(--clay); border-radius: var(--r-md); padding: var(--sp-5); margin: var(--sp-5) 0; }
+.repohead h3 { margin-top: 0; font-family: var(--font-mono); font-size: 17px; }
+.repohead .sub { color: var(--gray-500); font-size: 14px; margin-bottom: 0; }
+ol.numbered { list-style: none; padding-left: 0; counter-reset: n; }
+ol.numbered > li { counter-increment: n; position: relative; padding-left: var(--sp-7); margin-bottom: var(--sp-4); }
+ol.numbered > li::before { content: counter(n, decimal-leading-zero); position: absolute; left: 0; top: 1px; font-family: var(--font-mono); font-size: 12px; color: var(--clay); }
+footer.pagefoot { border-top: 1px solid var(--gray-300); margin-top: var(--sp-8); padding-top: var(--sp-5); font-size: 13px; color: var(--gray-500); display: flex; flex-wrap: wrap; gap: var(--sp-4); justify-content: space-between; }
+.nextprev { display: flex; gap: var(--sp-5); }
+@media (max-width: 640px) {
+  h1 { font-size: 30px; }
+  .wrap { padding: var(--sp-5) var(--sp-4) var(--sp-7); }
+  .nav-inner { padding: var(--sp-3) var(--sp-4); gap: var(--sp-3); }
+  .nav-brand { width: 100%; margin-right: 0; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="nav-inner">
+  <span class="nav-brand">flox extension research</span>
+  <a href="index.html">Overview</a>
+  <a href="research.html">Research</a>
+  <a href="architecture.html">Architecture</a>
+  <a href="changes.html">Changes</a>
+  <a href="manifest.html">Manifest</a>
+  <a class="here" href="plugins.html">Plugins</a>
+  <a href="examples.html">Examples</a>
+  <a href="risks.html">Risks</a>
+</div></nav>
+
+<div class="wrap">
+
+<div class="kicker">flox-hello-script · flox-hello-binary · flox-hello-local</div>
+<h1>Three extensions, three <span class="accent">install paths</span></h1>
+
+<p class="lede">Each reference repo exists to prove exactly one path through the installer works.
+They are deliberately trivial — the interesting content is not what they do, but what each one has
+to contain in order to be installable at all.</p>
+
+<h2>Side by side</h2>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead>
+<tr><th></th><th>flox-hello-script</th><th>flox-hello-binary</th><th>flox-hello-local</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td class="rowhead">Kind</td>
+  <td><code>script</code></td><td><code>binary</code></td><td><code>local</code></td>
+</tr>
+<tr>
+  <td class="rowhead">What ships</td>
+  <td>A bash script at the repo root</td>
+  <td>A Rust binary as a release asset</td>
+  <td>A bash script, never published</td>
+</tr>
+<tr>
+  <td class="rowhead">Install</td>
+  <td><code>flox extension install smorin/flox-hello-script</code></td>
+  <td><code>flox extension install smorin/flox-hello-binary</code></td>
+  <td><code>flox extension install --from-path .</code></td>
+</tr>
+<tr>
+  <td class="rowhead">How flox gets it</td>
+  <td><code>git clone</code></td>
+  <td>Download + verify + extract</td>
+  <td>Symlink into your working tree</td>
+</tr>
+<tr>
+  <td class="rowhead">Upgrade</td>
+  <td>Fetch and reset to the tracked branch</td>
+  <td>Resolve the newest release tag</td>
+  <td><span class="risk risk-look">refused</span> nothing to upgrade</td>
+</tr>
+<tr>
+  <td class="rowhead">Tracked files</td>
+  <td>5</td><td>10</td><td>5</td>
+</tr>
+<tr>
+  <td class="rowhead">Manifest</td>
+  <td>3 lines, no <code>schema</code></td>
+  <td>7 lines, with <code>schema</code></td>
+  <td>3 lines, no <code>schema</code></td>
+</tr>
+<tr>
+  <td class="rowhead">Release engineering</td>
+  <td>None</td>
+  <td>A tag-triggered matrix build</td>
+  <td>None</td>
+</tr>
+<tr>
+  <td class="rowhead">Proves</td>
+  <td>Clone-and-run is enough</td>
+  <td>Asset resolution and extraction</td>
+  <td>The dev loop needs no GitHub</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout">
+<p><strong>The script and local extensions ship byte-identical logic on purpose.</strong> Both are
+the same seven-line bash script differing only in a default name. That is good experimental design:
+holding the payload constant means any behavioral difference between them is attributable to the
+install path, which is the only thing they are meant to test.</p>
+</div>
+
+<h2>flox-hello-script — the minimum viable extension</h2>
+
+<div class="repohead">
+  <h3>smorin/flox-hello-script</h3>
+  <p class="sub">Script kind · installs as the <code>hello-script</code> extension · invoked as
+  <code>flox hello-script</code></p>
+</div>
+
+<p>This is the shape an extension takes when nothing is required of it. Five files, of which two
+are a licence and a CI workflow:</p>
+
+<div class="filebar"><span>tracked files</span></div>
+<pre class="code">flox-extension.toml       3 lines
+flox-hello-script         7 lines · executable, bash
+README.md
+LICENSE
+.github/workflows/ci.yml</pre>
+
+<p>The naming rule is doing quiet work here. The repo is <code>flox-hello-script</code>, so the
+name is <code>hello-script</code>, so the executable must be called <code>flox-hello-script</code>
+— repo name, extension name, and executable name are one string in three places. Getting that
+wrong is the first mistake an author makes, and it was the first mistake made here: commit
+<code>7305785</code> is <em>rename executable to flox-hello-script to match derived name</em>.</p>
+
+<div class="filebar"><span>flox-extension.toml</span><span>complete</span></div>
+<pre class="code">[extension]
+name = "hello-script"
+description = "Canonical script-kind reference extension for flox."</pre>
+
+<p>No <code>schema</code>, no <code>kind</code>, no <code>[environment]</code>. The serde default
+supplies the schema, probing supplies the kind, and an absent environment stanza means
+<code>Inherit</code>.</p>
+
+<div class="filebar"><span>flox-hello-script</span><span>complete</span></div>
+<pre class="code">#!/usr/bin/env bash
+set -euo pipefail
+
+name="${FLOX_EXTENSION_NAME:-hello}"
+version="${FLOX_EXTENSION_VERSION:-unknown}"
+
+echo "Hello from ${name} v${version}"
+if [ "$#" -gt 0 ]; then
+  echo "args: $*"
+fi</pre>
+
+<p>Two things worth copying from those seven lines. It reads its own identity from
+<code>FLOX_EXTENSION_NAME</code> rather than hardcoding it, with a fallback for when it is run
+directly outside flox — so the same file works both as an installed extension and as a script you
+can execute to debug. And it echoes <code>$*</code>, which is what demonstrates that arguments
+after the extension name are forwarded untouched.</p>
+
+<h3>What its commit history teaches</h3>
+
+<p>Three commits, and two of them are corrections that every new author will need:</p>
+
+<ol class="numbered">
+<li><code>84b46cf</code> — the initial extension.</li>
+<li><code>7305785</code> — <em>rename executable to flox-hello-script to match derived name.</em>
+The executable filename is not free; it is derived from the repo name.</li>
+<li><code>c8d5f41</code> — <em>drop phantom <code>kind</code> field; don't require optional
+<code>description</code>.</em> The author had written <code>kind = "script"</code> following the
+design document. The shipped parser has no such field, so it was inert.</li>
+</ol>
+
+<div class="callout">
+<p><strong>The README did not follow its own fix.</strong> <code>README.md</code> still describes
+the repo as "a <code>flox-extension.toml</code> manifest declaring <code>kind = "script"</code>" —
+the exact field commit <code>c8d5f41</code> removed. Its usage examples also say
+<code>flox extension upgrade hello</code> and <code>remove hello</code>, though the extension is
+named <code>hello-script</code>. Neither breaks anything, and both would mislead someone copying
+from the canonical example.</p>
+</div>
+
+<h2>flox-hello-binary — the release pipeline</h2>
+
+<div class="repohead">
+  <h3>smorin/flox-hello-binary</h3>
+  <p class="sub">Binary kind · tagged <code>v0.1.0</code> · macOS only at this version</p>
+</div>
+
+<p>The same program, in Rust, with everything that shipping a compiled artifact demands:</p>
+
+<div class="filebar"><span>tracked files</span></div>
+<pre class="code">flox-extension.toml            7 lines · declares the asset template
+src/main.rs                   19 lines · same behavior as the bash script
+Cargo.toml · Cargo.lock
+.github/workflows/release.yml  the tag-triggered matrix build
+.github/workflows/ci.yml
+PROJECTS.md                    tracks Linux support as P02
+README.md · LICENSE · .gitignore</pre>
+
+<p><code>src/main.rs</code> is the bash script transliterated — read
+<code>FLOX_EXTENSION_NAME</code> and <code>FLOX_EXTENSION_VERSION</code> from the environment with
+fallbacks, print a greeting, echo any arguments. Nineteen lines including a smoke test. The point
+was never the program.</p>
+
+<div class="filebar"><span>flox-extension.toml</span><span>complete</span></div>
+<pre class="code">schema = "1"
+
+[extension]
+name = "hello-binary"
+description = "Canonical binary-kind reference extension for flox"
+
+[extension.binary]
+source = "github-release"
+asset = "flox-hello-binary-{os}-{arch}.tar.gz"</pre>
+
+<p>This is the manifest the <a href="manifest.html">manifest page</a> discusses: the
+<code>asset</code> template renders <code>{os}</code> as <code>macos</code> on macOS, which is why
+the workflow below produces <code>flox-hello-binary-macos-aarch64.tar.gz</code> and not
+<code>...-darwin-...</code> as the author guide would lead you to write. The example is right; the
+guide is wrong.</p>
+
+<h3>The release workflow</h3>
+
+<p>Tag-triggered on <code>v*.*.*</code>, a two-job build-then-release split, with one detail worth
+stealing:</p>
+
+<div class="filebar"><span>.github/workflows/release.yml</span><span>excerpt</span></div>
+<pre class="code">jobs:
+  build:
+    runs-on: macos-latest              # ← both arches built on one runner
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-apple-darwin
+            asset_arch: x86_64
+          - target: aarch64-apple-darwin
+            asset_arch: aarch64
+    steps:
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - run: cargo build --release --target "$TARGET"
+
+      - name: Stage archive
+        run: |
+          asset="flox-hello-binary-macos-${ASSET_ARCH}.tar.gz"
+          staging=$(mktemp -d)
+          cp "target/${TARGET}/release/flox-hello-binary" "$staging/flox-hello-binary"
+          tar -C "$staging" -czf "$asset" flox-hello-binary
+          shasum -a 256 "$asset"       # ← printed to the log, not published
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest             # ← cheap runner, only calls the API
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: dist, merge-multiple: true }
+      - run: gh release create "$TAG" --repo "$REPO" dist/*.tar.gz</pre>
+
+<p>Three decisions in there are worth carrying into any real extension:</p>
+
+<ul>
+<li><strong>Both macOS architectures cross-compile from one runner.</strong> Commit
+<code>69236a5</code> is the fix that made this so — <em>cross-compile both macOS arches from
+macos-latest</em>. Apple's toolchain targets both from either host, so a matrix over
+<code>target</code> rather than over <code>runs-on</code> halves the runner cost.</li>
+<li><strong>The archive is staged so it contains exactly one file at the root.</strong> The binary
+is copied to a temp directory and archived from there, so it unpacks as
+<code>flox-hello-binary</code> and not
+<code>target/aarch64-apple-darwin/release/flox-hello-binary</code>. flox looks for the executable
+by name after extraction; a nested path would not be found.</li>
+<li><strong>The release job runs on Ubuntu.</strong> It only downloads artifacts and calls the
+GitHub API, so paying for a macOS runner to do it would be waste.</li>
+</ul>
+
+<h3>The macOS-only limitation</h3>
+
+<p>v0.1.0 ships two assets, both macOS. This is scoped rather than forgotten — the repo's own
+<code>PROJECTS.md</code> tracks Linux as <code>P02</code>, and puts Windows explicitly out of
+scope on the grounds that flox's own platform matrix does not include it yet.</p>
+
+<p>The practical consequence: this reference extension cannot be installed on Linux. Anyone
+learning the binary path on a Linux machine will hit a <code>no release asset matches</code> error
+that is correct but discouraging. Flagged on the <a href="risks.html">risks page</a>.</p>
+
+<h2>flox-hello-local — the loop authors actually live in</h2>
+
+<div class="repohead">
+  <h3>smorin/flox-hello-local</h3>
+  <p class="sub">Local kind · never installed from GitHub · exercises
+  <code>--from-path</code></p>
+</div>
+
+<p>Structurally identical to <code>flox-hello-script</code> — same five files, same three-line
+manifest, the same bash script with a different default name. The difference is entirely in how it
+gets installed.</p>
+
+<div class="filebar"><span>the local authoring loop</span></div>
+<pre class="code">git clone https://github.com/smorin/flox-hello-local
+cd flox-hello-local
+
+flox extension install --from-path .      # symlinks into this working tree
+flox hello-local world
+# Hello from hello-local v&lt;commit&gt;
+# args: world
+
+$EDITOR flox-hello-local                  # change something
+
+flox extension install --from-path . --force   # re-register
+flox hello-local world                    # see the change</pre>
+
+<p><code>--from-path</code> skips GitHub entirely: no clone, no release lookup, no network. The
+installer reads <code>flox-extension.toml</code> from the working tree for the name, or derives it
+from the directory basename by stripping a leading <code>flox-</code>.</p>
+
+<h3>Why upgrade refuses, and why that is right</h3>
+
+<p>A local install symlinks <code>~/.local/share/flox/extensions/flox-hello-local/flox-hello-local</code>
+to the file in your working tree. There is no remote to compare against and no version to advance
+to — <code>upgrade</code> would be meaningless. Rather than silently succeed, it refuses and says
+so.</p>
+
+<div class="callout">
+<p><strong>The symlink is the whole trick, and it has one sharp edge.</strong> Because the
+executable is a symlink, edits to a <em>script</em> take effect immediately — the next
+<code>flox hello-local</code> reads the new bytes with no reinstall. But the manifest is
+<em>copied</em>, not symlinked, deliberately so that a half-edited TOML file cannot corrupt install
+state. So editing the script needs no reinstall, and editing the manifest does. The README's
+<code>--force</code> loop covers both cases, which is why it is written that way.</p>
+</div>
+
+<h2>Which one should you write?</h2>
+
+<div class="grid-3">
+  <div class="card card-outlined">
+    <h4>Start local, always</h4>
+    <p>Whatever you are ultimately shipping, develop with <code>--from-path</code>. No push, no
+    tag, no release, no waiting on CI. Move to a published kind only when someone else needs to
+    install it.</p>
+  </div>
+  <div class="card card-outlined">
+    <h4>Ship as script by default</h4>
+    <p>Bash, Python, Ruby, Node — anything with a shebang. No build, no release engineering, and
+    users can read the source before running it, which matters given that
+    <a href="risks.html">extensions are unsandboxed</a>. Most extensions should stop here.</p>
+  </div>
+  <div class="card card-outlined">
+    <h4>Ship as binary when you must</h4>
+    <p>Rust, Go, C — where clone-and-run is not viable. You are taking on a release pipeline, a
+    platform matrix, and the obligation to build for every architecture your users have. Copy the
+    workflow above and add Linux from the start.</p>
+  </div>
+</div>
+
+<footer class="pagefoot">
+  <span>Sources: the three <code>flox-hello-*</code> repositories and their commit histories</span>
+  <span class="nextprev">
+    <a href="manifest.html">← The manifest</a>
+    <a href="risks.html">Next: impact and risks →</a>
+  </span>
+</footer>
+
+</div>
+</body>
+</html>

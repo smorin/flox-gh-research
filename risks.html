@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Impact and risks — the flox extension subsystem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;430;500;600&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  color-scheme: light;
+  --clay:    #D97757;
+  --slate:   #141413;
+  --ivory:   #FAF9F5;
+  --oat:     #E3DACC;
+  --white:    #FFFFFF;
+  --gray-100: #F0EEE6;
+  --gray-300: #D1CFC5;
+  --gray-500: #87867F;
+  --gray-700: #3D3D3A;
+  --success: #788C5D;
+  --warning: #C78E3F;
+  --danger:  #B04A4A;
+  --info:    #5C7CA3;
+  --sp-1: 4px;  --sp-2: 8px;
+  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px;
+  --sp-7: 48px; --sp-8: 64px;
+  --r-xs: 4px;  --r-sm: 8px;
+  --r-md: 12px; --r-lg: 20px;
+  --shadow-sm: 0 1px 2px rgba(20,20,19,.06);
+  --shadow-md: 0 4px 10px rgba(20,20,19,.08);
+  --shadow-lg: 0 12px 28px rgba(20,20,19,.12);
+  --ease-out:    cubic-bezier(.16, 1, .3, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --font-sans:  "Geist", "Söhne", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Source Serif 4", "Tiempos", Georgia, serif;
+  --font-mono:  "JetBrains Mono", "Berkeley Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ivory); color: var(--slate); font-family: var(--font-sans); font-size: 16px; font-weight: 430; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+strong { font-weight: 500; color: var(--slate); }
+em { font-style: normal; font-weight: 500; color: var(--slate); }
+a { color: var(--clay); text-decoration: none; border-bottom: 1px solid rgba(217,119,87,.3); }
+a:hover { border-bottom-color: var(--clay); }
+code { font-family: var(--font-mono); font-size: .89em; background: var(--gray-100); padding: 1px 5px; border-radius: var(--r-xs); color: var(--gray-700); }
+.tbl code, pre code { background: none; padding: 0; }
+.nav { background: var(--white); border-bottom: 1px solid var(--gray-300); position: sticky; top: 0; z-index: 20; }
+.nav-inner { max-width: 940px; margin: 0 auto; padding: var(--sp-3) var(--sp-5); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-4); }
+.nav-brand { font-family: var(--font-mono); font-size: 13px; color: var(--gray-500); margin-right: auto; }
+.nav a { font-size: 14px; color: var(--gray-700); border-bottom: 2px solid transparent; padding-bottom: 2px; }
+.nav a:hover { color: var(--slate); border-bottom-color: var(--gray-300); }
+.nav a.here { color: var(--clay); border-bottom-color: var(--clay); }
+.wrap { max-width: 940px; margin: 0 auto; padding: var(--sp-7) var(--sp-5) var(--sp-8); }
+h1 { font-family: var(--font-serif); font-size: 40px; line-height: 1.15; font-weight: 600; margin: 0 0 var(--sp-4); }
+.accent { font-family: var(--font-serif); font-style: italic; color: var(--clay); font-weight: inherit; }
+h2 { font-size: 24px; line-height: 1.3; font-weight: 500; margin: var(--sp-8) 0 var(--sp-4); padding-top: var(--sp-5); border-top: 1px solid var(--gray-300); }
+h3 { font-size: 18px; line-height: 1.35; font-weight: 500; margin: var(--sp-6) 0 var(--sp-3); }
+h4 { font-size: 15px; font-weight: 500; margin: var(--sp-5) 0 var(--sp-2); color: var(--gray-700); }
+p { margin: 0 0 var(--sp-4); }
+ul, ol { margin: 0 0 var(--sp-4); padding-left: var(--sp-5); }
+li { margin-bottom: var(--sp-2); }
+.lede { font-size: 18px; line-height: 1.55; color: var(--gray-700); margin-bottom: var(--sp-5); }
+.kicker { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--gray-500); margin-bottom: var(--sp-2); }
+.callout { background: var(--oat); border-left: 3px solid var(--clay); padding: var(--sp-4) var(--sp-5); border-radius: var(--r-sm); color: var(--gray-700); margin: var(--sp-5) 0; }
+.callout strong { color: var(--slate); }
+.callout p:last-child { margin-bottom: 0; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; margin: var(--sp-4) 0 var(--sp-5); background: var(--white); }
+.tbl th, .tbl td { text-align: left; padding: var(--sp-3); border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+.tbl th { font-weight: 500; color: var(--gray-500); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.tbl tr:hover td { background: var(--gray-100); }
+.tbl td.sha { font-family: var(--font-mono); font-size: 12px; color: var(--gray-500); white-space: nowrap; }
+.scroll-x { overflow-x: auto; background: var(--white); border-radius: var(--r-sm); }
+pre.code { background: var(--white); border: 1px solid var(--gray-300); border-radius: var(--r-sm); padding: var(--sp-4); overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; color: var(--gray-700); margin: 0 0 var(--sp-5); }
+.filebar { display: flex; justify-content: space-between; align-items: center; background: var(--gray-100); border: 1px solid var(--gray-300); border-bottom: 0; border-radius: var(--r-sm) var(--r-sm) 0 0; padding: 6px var(--sp-3); font-family: var(--font-mono); font-size: 12px; color: var(--gray-700); margin-top: var(--sp-4); }
+.filebar + pre.code { margin-top: 0; border-radius: 0 0 var(--r-sm) var(--r-sm); }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; line-height: 1.3; white-space: nowrap; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.badge-draft { background: var(--gray-100); color: var(--gray-700); }
+.badge-in-review { background: rgba(92, 124, 163, .14); color: var(--info); }
+.badge-done { background: rgba(120, 140, 93, .16); color: var(--success); }
+.badge-overdue { background: rgba(176, 74, 74, .14); color: var(--danger); }
+.badge-blocked { background: rgba(199, 142, 63, .14); color: var(--warning); }
+.risk { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: var(--r-xs); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; border: 1px solid; white-space: nowrap; }
+.risk-safe { color: var(--success); border-color: rgba(120,140,93,.35); background: rgba(120,140,93,.08); }
+.risk-look { color: var(--warning); border-color: rgba(199,142,63,.35); background: rgba(199,142,63,.08); }
+.risk-attn { color: var(--danger);  border-color: rgba(176,74,74,.35);  background: rgba(176,74,74,.08); }
+.card { background: var(--white); border-radius: var(--r-md); padding: var(--sp-4); transition: box-shadow 200ms var(--ease-out); }
+.card-outlined { border: 1px solid var(--gray-300); }
+.card-stripe { border: 1px solid var(--gray-300); border-left: 3px solid var(--clay); }
+.card-inset { background: var(--gray-100); border: 1px solid var(--gray-100); box-shadow: inset 0 1px 0 rgba(20,20,19,.04); }
+.card h3, .card h4 { margin-top: 0; }
+.card p:last-child, .card ul:last-child { margin-bottom: 0; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+ol.numbered { list-style: none; padding-left: 0; counter-reset: n; }
+ol.numbered > li { counter-increment: n; position: relative; padding-left: var(--sp-7); margin-bottom: var(--sp-4); }
+ol.numbered > li::before { content: counter(n, decimal-leading-zero); position: absolute; left: 0; top: 1px; font-family: var(--font-mono); font-size: 12px; color: var(--clay); }
+footer.pagefoot { border-top: 1px solid var(--gray-300); margin-top: var(--sp-8); padding-top: var(--sp-5); font-size: 13px; color: var(--gray-500); display: flex; flex-wrap: wrap; gap: var(--sp-4); justify-content: space-between; }
+.nextprev { display: flex; gap: var(--sp-5); }
+@media (max-width: 640px) {
+  h1 { font-size: 30px; }
+  .wrap { padding: var(--sp-5) var(--sp-4) var(--sp-7); }
+  .nav-inner { padding: var(--sp-3) var(--sp-4); gap: var(--sp-3); }
+  .nav-brand { width: 100%; margin-right: 0; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="nav-inner">
+  <span class="nav-brand">flox extension research</span>
+  <a href="index.html">Overview</a>
+  <a href="research.html">Research</a>
+  <a href="architecture.html">Architecture</a>
+  <a href="changes.html">Changes</a>
+  <a href="manifest.html">Manifest</a>
+  <a href="plugins.html">Plugins</a>
+  <a href="examples.html">Examples</a>
+  <a class="here" href="risks.html">Risks</a>
+</div></nav>
+
+<div class="wrap">
+
+<div class="kicker">Assessment</div>
+<h1>Impact, and the <span class="accent">sharp edges</span></h1>
+
+<p class="lede">What the subsystem makes possible, what it costs to keep, which risks were accepted
+deliberately, which were found and fixed after the fact, and what a maintainer picking this up
+should look at first.</p>
+
+<h2>What becomes possible</h2>
+
+<p>The design document framed impact through four user workflows. All four work today:</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Who</th><th>What they can now do</th></tr></thead>
+<tbody>
+<tr>
+  <td>Platform engineer at a company using flox</td>
+  <td>Write <code>flox-deploy</code> as a bash script that pins the team's toolchain environment,
+  publish it as <code>acme/flox-deploy</code>, and have the team run
+  <code>flox deploy staging</code> — with the deploy toolchain guaranteed present regardless of
+  what each person has activated.</td>
+</tr>
+<tr>
+  <td>Open-source contributor</td>
+  <td>Ship a compiled extension via GitHub Releases and have users install it with one command
+  that picks the right binary for their platform.</td>
+</tr>
+<tr>
+  <td>Solo developer</td>
+  <td>Iterate against a working tree with <code>--from-path</code>, with no push, tag, or release
+  in the loop.</td>
+</tr>
+<tr>
+  <td>CI pipeline</td>
+  <td>Pin an extension to a tag so a build is reproducible, and have <code>upgrade --all</code>
+  refuse to move it without <code>--force</code>.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p>The one that matters most is the first, because it is the one <code>gh</code> cannot do. Every
+other CLI extension system hands you a program and hopes its dependencies are present. This one
+lets the extension carry its environment.</p>
+
+<h3>What it costs to keep</h3>
+
+<div class="grid-3">
+  <div class="card card-outlined">
+    <h4>Ongoing surface</h4>
+    <p>Roughly 6,500 lines of production Rust plus 1,000 of bats. Two thirds of it is
+    <code>manager.rs</code> and <code>github.rs</code> — filesystem mutation and API negotiation,
+    the two things that need care.</p>
+  </div>
+  <div class="card card-outlined">
+    <h4>An external contract</h4>
+    <p>Once third parties publish extensions, <code>flox-extension.toml</code> and the four
+    <code>FLOX_EXTENSION_*</code> variables become a compatibility surface. Changing them breaks
+    other people's software.</p>
+  </div>
+  <div class="card card-outlined">
+    <h4>A GitHub dependency</h4>
+    <p>Install and upgrade require reaching <code>api.github.com</code>. Rate limits, outages, and
+    API changes become flox's problem. The <code>ExtensionSource</code> abstraction anticipates
+    this but only has one implementation.</p>
+  </div>
+</div>
+
+<h3>Blast radius if it goes wrong</h3>
+
+<p>Narrower than it looks, with one exception. The subsystem is additive and flag-gated, so a bug
+in install, list, remove, upgrade, or search affects only people who invoke those commands.</p>
+
+<div class="callout">
+<p><strong>The exception is the two-phase parse.</strong> The dispatch fallback runs on
+<em>every</em> failed parse of <em>every</em> flox invocation. A bug there — a panic, a hang, a
+swallowed error message — would surface as a broken experience for anyone who mistypes any flox
+command, whether or not they have ever installed an extension.</p>
+<p>The mitigation in the current design is that the fallback is narrow: it fires only when the
+parse already failed and the first token does not begin with <code>-</code>, and on no match it
+prints the original parse error as though it had never run. That narrowness is the safety
+property, and it is worth protecting in review.</p>
+</div>
+
+<h2>Risks accepted deliberately</h2>
+
+<p>These are non-goals, not oversights. Each was argued in the design document, and each matches
+what <code>gh</code> does.</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th></th><th>Accepted risk</th><th>The argument for accepting it</th></tr></thead>
+<tbody>
+<tr>
+  <td><span class="risk risk-attn">high</span></td>
+  <td><strong>No sandboxing.</strong> An extension runs with the user's full privileges. Installing
+  one is running arbitrary code from the internet.</td>
+  <td>Identical to <code>gh</code>, <code>brew</code> taps, and every plugin ecosystem of this
+  shape. Trust is by code review, not enforcement. The practical mitigation is social: script-kind
+  extensions are readable before you run them, which is a real argument for preferring them.</td>
+</tr>
+<tr>
+  <td><span class="risk risk-look">medium</span></td>
+  <td><strong>No signature or provenance verification.</strong> Nothing proves a release asset was
+  built from the source in the repo.</td>
+  <td>Deferred explicitly. A compromised maintainer account or CI pipeline can ship a malicious
+  binary and flox will install it. Digest verification, added later, catches corruption in transit
+  but not a bad artifact at the source.</td>
+</tr>
+<tr>
+  <td><span class="risk risk-safe">low</span></td>
+  <td><strong>No curated registry.</strong> Discovery is searching a GitHub topic anyone can
+  apply.</td>
+  <td>Sufficient for v1 and honest about what it is. Anyone can tag a repo
+  <code>flox-extension</code>, so <code>search</code> results carry no endorsement — which users
+  broadly already understand about GitHub topics.</td>
+</tr>
+<tr>
+  <td><span class="risk risk-safe">low</span></td>
+  <td><strong>Extensions cannot override built-in commands.</strong></td>
+  <td>Rejected at install time against <code>reserved.rs</code>. See the shadowing note below for
+  the direction this check does <em>not</em> cover.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2>The hardening sweep</h2>
+
+<p>The most informative thing in the commit history is what happened <em>after</em> the GA
+commit. <code>a28190031</code> flipped the feature flag on by default and declared v1. Every
+commit after it is a fix, and several are security fixes.</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Commit</th><th>Fix</th><th>Why it matters</th></tr></thead>
+<tbody>
+<tr><td class="sha">a28190031</td><td><em>GA flag-flip, user/author docs, gh-parity smoke tests</em></td><td><span class="badge badge-done">v1 declared here</span></td></tr>
+<tr><td class="sha">23dc96c25</td><td>Block tar-slip and zip-slip on archive extraction</td><td>A malicious archive containing <code>../../.bashrc</code> could write outside the install directory. This is the classic archive-extraction vulnerability, and it was live at GA.</td></tr>
+<tr><td class="sha">166b76583</td><td>Reject off-allowlist GitHub asset download URLs</td><td>A release-asset URL is API-supplied data. Without an allowlist, a crafted API response could redirect the downloader anywhere.</td></tr>
+<tr><td class="sha">f692e3016</td><td>Verify advertised sha256 of the binary asset</td><td>Upgrades the design document's "recorded but not verified" to actually verified against what GitHub advertises. Detects transit corruption; not a provenance guarantee.</td></tr>
+<tr><td class="sha">f3b0167fb</td><td>Lock before reading state; atomic <code>state.toml</code> rewrite</td><td>A read racing a concurrent write could observe a half-written state file.</td></tr>
+<tr><td class="sha">7ac253327</td><td>Gate subcommand handlers on <code>FLOX_FEATURES_EXTENSIONS</code></td><td>The opt-out did not fully disable the subcommand family, so the escape hatch was incomplete.</td></tr>
+<tr><td class="sha">99d0af265</td><td>Classify HTTP 401, 403, and 429 uniformly</td><td>Rate limiting and auth failure previously surfaced inconsistently depending on which call hit them.</td></tr>
+<tr><td class="sha">5b9f1817a</td><td>Align binary upgrade dry-run with real upgrade for <code>NoRelease</code></td><td>A dry run that disagrees with the real thing is worse than no dry run.</td></tr>
+<tr><td class="sha">43a25e0ad</td><td>Route user-facing status through <code>message::*</code></td><td>Some output bypassed the standard reporting layer, so it ignored formatting and quiet conventions.</td></tr>
+<tr><td class="sha">65885f3f0</td><td>Reserved-name case handling, dry-run IO classification, branch pins</td><td>Reserved-name matching was case-sensitive — <code>flox-Install</code> would have slipped past the collision check.</td></tr>
+<tr><td class="sha">9ad63219b</td><td>Surface un-snapshotted rows in <code>upgrade --all</code></td><td>Some extensions were silently omitted from the results table, which reads as "nothing to do".</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>How to read that table</h3>
+
+<p>Both readings are true and both are worth stating.</p>
+
+<div class="grid-2">
+  <div class="card card-stripe">
+    <h4>The encouraging reading</h4>
+    <p>Someone went looking, systematically, in exactly the places where this class of code goes
+    wrong: archive extraction, URL handling, digest verification, lock ordering, and error
+    classification. Each fix is small, targeted, and has a test. That is a functioning review
+    process.</p>
+  </div>
+  <div class="card card-stripe">
+    <h4>The cautionary reading</h4>
+    <p>Three of these are security bugs, and all three were present when the flag was flipped to
+    on-by-default. Tar-slip in particular is a known, named vulnerability class that a
+    pre-GA checklist should have caught. GA preceded the security review rather than following
+    it.</p>
+  </div>
+</div>
+
+<p>For a maintainer, the actionable version: the code is in good shape <em>now</em>, and the
+process ordering that produced it should not be repeated for the next milestone. A pre-merge
+security checklist covering archive extraction, URL allowlisting, digest handling, and lock
+ordering would have caught all three before the flag flip.</p>
+
+<h2>Specification and documentation drift</h2>
+
+<p>Everything below is a documentation defect rather than a code defect. Nothing here breaks a
+build. All of it would mislead someone reading the canonical sources.</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th></th><th>Where</th><th>Says</th><th>Actually</th></tr></thead>
+<tbody>
+<tr>
+  <td><span class="risk risk-attn">worst</span></td>
+  <td><code>docs/extensions/author-guide.md</code></td>
+  <td><code>{os}</code> renders as <code>darwin</code>, <code>linux</code>, or
+  <code>windows</code></td>
+  <td>Renders Rust's <code>std::env::consts::OS</code> — <code>macos</code> on macOS. Masked by
+  the substring fallback, so following the wrong docs still works.
+  <a href="manifest.html">Detail</a>.</td>
+</tr>
+<tr>
+  <td><span class="risk risk-look">notable</span></td>
+  <td><code>docs/extensions/author-guide.md</code></td>
+  <td>Links a fourth example repo, <code>flox-examples/flox-hello-pinned</code></td>
+  <td>No such repo exists alongside the other three. The one documented demonstration of
+  <code>mode = "pinned"</code> and <code>inside = "error"</code> is a dangling link.</td>
+</tr>
+<tr>
+  <td><span class="risk risk-look">notable</span></td>
+  <td><code>docs/extensions/author-guide.md</code></td>
+  <td><code>flox extension search</code> is "currently under development"</td>
+  <td>Shipped as <code>P08</code>.</td>
+</tr>
+<tr>
+  <td><span class="risk risk-look">notable</span></td>
+  <td>User guide vs author guide</td>
+  <td>Quick tour installs <code>flox-examples/flox-hello-script</code>; author guide links
+  <code>smorin/flox-hello-script</code></td>
+  <td>The repos live under <code>smorin</code>. The <code>flox-examples</code> references are
+  left over from the design document's plan and will 404.</td>
+</tr>
+<tr>
+  <td><span class="risk risk-safe">minor</span></td>
+  <td><code>flox-hello-script/README.md</code></td>
+  <td>Describes a manifest "declaring <code>kind = "script"</code>"; uses <code>hello</code> in
+  its upgrade and remove examples</td>
+  <td>The <code>kind</code> field was removed from that very repo in commit <code>c8d5f41</code>,
+  and the extension is named <code>hello-script</code>.</td>
+</tr>
+<tr>
+  <td><span class="risk risk-safe">minor</span></td>
+  <td><code>PROJECTS.md</code></td>
+  <td>Roadmap table shows <code>P07</code> as not started</td>
+  <td>The <code>P07</code> section below it is complete with every task checked. The summary table
+  was not updated.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p>The schema drift between the design document and the shipped manifest is the largest single
+divergence, but it is a category apart — the document explicitly authorized being overridden by
+the code. It is catalogued on the <a href="manifest.html">manifest page</a> rather than counted
+here.</p>
+
+<h2>Open technical questions</h2>
+
+<h3>Built-in commands can shadow extensions, and nothing checks for it</h3>
+
+<div class="callout">
+<p>The collision check runs one direction only. At install time, a name matching a built-in is
+rejected — so an extension can never shadow a core command. But the reverse is unguarded: if flox
+core later adds a top-level subcommand matching an already-installed extension, the parser will
+match the built-in first and the extension becomes silently unreachable. No error, no warning; the
+command simply does something else.</p>
+<p>The adjacent problem — keeping <code>reserved.rs</code> in sync with the <code>Commands</code>
+enum — <em>is</em> guarded. <code>cli/flox/src/commands/mod.rs</code> carries an
+<code>extension_drift_tests</code> module that scrapes <code>flox --help</code> and asserts every
+visible top-level command appears in <code>RESERVED_COMMAND_NAMES</code>. Its own doc comment
+states the shadowing direction plainly: <em>a top-level subcommand always shadows an extension of
+the same name.</em></p>
+<p>That test protects the check that exists. It cannot protect against the case above, because
+the collision only becomes real after a user has already installed the extension — and no
+installed-extension audit runs when flox itself gains a command. Note also that hidden commands
+never appear in <code>--help</code>, so <code>extension</code> and <code>help</code> are still
+maintained by hand in the list.</p>
+</div>
+
+<h3>The rest</h3>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Question</th><th>Status</th><th>Consequence today</th></tr></thead>
+<tbody>
+<tr>
+  <td>Windows support</td>
+  <td><span class="risk risk-look">open</span></td>
+  <td><code>{ext}</code> renders <code>zip</code> on Windows and archive extraction handles zip,
+  but no Windows platform matchers exist and nothing is tested there. Partially built, not
+  supported.</td>
+</tr>
+<tr>
+  <td>The Linux gap in the binary example</td>
+  <td><span class="risk risk-look">open</span></td>
+  <td><code>flox-hello-binary</code> v0.1.0 ships macOS assets only, so the canonical binary
+  reference cannot be installed on Linux. Tracked as <code>P02</code> in that repo.</td>
+</tr>
+<tr>
+  <td>Telemetry</td>
+  <td><span class="risk risk-look">deferred</span></td>
+  <td><code>P07-T04</code> and <code>P07-TS03</code> cut at design review. Three of the design
+  document's four success metrics — install failure rate, dispatch overhead, adoption — are
+  currently unmeasurable.</td>
+</tr>
+<tr>
+  <td>FloxHub as a second source</td>
+  <td><span class="risk risk-attn">open, and harder than planned</span></td>
+  <td><code>P09</code>, not started — and the <code>ExtensionSource</code> trait that was supposed
+  to make it a drop-in was never built. <code>source.rs</code> is a one-line stub;
+  <code>floxhub.rs</code> does not exist. Data migration is still unnecessary thanks to the
+  <code>source</code> discriminant in <code>state.toml</code>, but adding FloxHub now means
+  extracting an abstraction from working code rather than filling a prepared slot. Detail on the
+  <a href="changes.html">change inventory</a>.</td>
+</tr>
+<tr>
+  <td>The <code>flox-extension-precompile</code> Action</td>
+  <td><span class="risk risk-look">open</span></td>
+  <td>Binary authors hand-roll a release workflow. The one in <code>flox-hello-binary</code> is
+  the de facto template.</td>
+</tr>
+<tr>
+  <td>The inert <code>inherit</code> manifest field</td>
+  <td><span class="risk risk-safe">documented</span></td>
+  <td>Parsed and never read. Honestly labelled in the author guide as reserved, but it shares a
+  name with the design document's field of different meaning — the most confusing artifact of the
+  drift.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2>The largest open question is not technical</h2>
+
+<p><code>PROJECTS.md</code> states the branch discipline plainly: all work is committed exclusively
+to <code>smorin/github-extension-prototype</code>, with no merges to <code>main</code>, no side
+branches, and no pull request opened until the branch owner decides.</p>
+
+<p>So the subsystem is feature-complete through <code>P08</code>, GA'd against its own criteria,
+hardened by a review sweep, documented for both users and authors, and demonstrated by three
+reference extensions — and it lives on a branch in a fork that has never been proposed upstream.</p>
+
+<div class="callout">
+<p><strong>What that means for the work's value.</strong> Every technical risk on this page is
+tractable and most are small. The risk that dominates them is that the branch diverges from
+<code>flox/flox</code> faster than it can be rebased. This is a fork of a moving repository at
+v1.11.2; the two-phase parse in <code>main.rs</code>, the <code>Commands</code> enum variant, and
+the <code>Features</code> struct are all in files that upstream touches routinely.</p>
+<p>If this is intended to land upstream, the sequencing question — propose now with telemetry and
+Linux assets outstanding, or complete them first and rebase against a further-moved
+<code>main</code> — is the decision worth making deliberately rather than by default.</p>
+</div>
+
+<h2>If you are picking this up, read these first</h2>
+
+<ol class="numbered">
+<li><strong><code>PROJECTS.md</code>, the design-constraints section.</strong> Seven binding rules
+that explain most structural decisions in the codebase. Ignore them and your change will look
+foreign.</li>
+<li><strong><code>CLAUDE.local.md</code>.</strong> Hard-won operational detail found nowhere else:
+the non-reentrant <code>LockGuard</code>, the bats environment's missing tools, the
+<code>GitCommandProvider</code> quirk where <code>--branch</code> rejects raw SHAs, and the rule
+that per-operation error enums are not to be merged into an aggregate.</li>
+<li><strong><code>cli/tests/extension.bats</code>.</strong> The most accurate description of what
+the system actually does, because it is the only description that fails when it is wrong.</li>
+</ol>
+
+<footer class="pagefoot">
+  <span>Assessment based on the repositories as they stood on 2026-07-21.</span>
+  <span class="nextprev">
+    <a href="plugins.html">← The three extensions</a>
+    <a href="index.html">Back to overview →</a>
+  </span>
+</footer>
+
+</div>
+</body>
+</html>

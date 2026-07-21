@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>The design document — gh_extension_flox.md</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;430;500;600&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  color-scheme: light;
+  --clay:    #D97757;
+  --slate:   #141413;
+  --ivory:   #FAF9F5;
+  --oat:     #E3DACC;
+  --white:    #FFFFFF;
+  --gray-100: #F0EEE6;
+  --gray-300: #D1CFC5;
+  --gray-500: #87867F;
+  --gray-700: #3D3D3A;
+  --success: #788C5D;
+  --warning: #C78E3F;
+  --danger:  #B04A4A;
+  --info:    #5C7CA3;
+  --sp-1: 4px;  --sp-2: 8px;
+  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px;
+  --sp-7: 48px; --sp-8: 64px;
+  --r-xs: 4px;  --r-sm: 8px;
+  --r-md: 12px; --r-lg: 20px;
+  --shadow-sm: 0 1px 2px rgba(20,20,19,.06);
+  --shadow-md: 0 4px 10px rgba(20,20,19,.08);
+  --shadow-lg: 0 12px 28px rgba(20,20,19,.12);
+  --ease-out:    cubic-bezier(.16, 1, .3, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --font-sans:  "Geist", "Söhne", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Source Serif 4", "Tiempos", Georgia, serif;
+  --font-mono:  "JetBrains Mono", "Berkeley Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ivory); color: var(--slate); font-family: var(--font-sans); font-size: 16px; font-weight: 430; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+strong { font-weight: 500; color: var(--slate); }
+em { font-style: normal; font-weight: 500; color: var(--slate); }
+a { color: var(--clay); text-decoration: none; border-bottom: 1px solid rgba(217,119,87,.3); }
+a:hover { border-bottom-color: var(--clay); }
+code { font-family: var(--font-mono); font-size: .89em; background: var(--gray-100); padding: 1px 5px; border-radius: var(--r-xs); color: var(--gray-700); }
+.tbl code, pre code { background: none; padding: 0; }
+.nav { background: var(--white); border-bottom: 1px solid var(--gray-300); position: sticky; top: 0; z-index: 20; }
+.nav-inner { max-width: 940px; margin: 0 auto; padding: var(--sp-3) var(--sp-5); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-4); }
+.nav-brand { font-family: var(--font-mono); font-size: 13px; color: var(--gray-500); margin-right: auto; }
+.nav a { font-size: 14px; color: var(--gray-700); border-bottom: 2px solid transparent; padding-bottom: 2px; }
+.nav a:hover { color: var(--slate); border-bottom-color: var(--gray-300); }
+.nav a.here { color: var(--clay); border-bottom-color: var(--clay); }
+.wrap { max-width: 940px; margin: 0 auto; padding: var(--sp-7) var(--sp-5) var(--sp-8); }
+h1 { font-family: var(--font-serif); font-size: 40px; line-height: 1.15; font-weight: 600; margin: 0 0 var(--sp-4); }
+.accent { font-family: var(--font-serif); font-style: italic; color: var(--clay); font-weight: inherit; }
+h2 { font-size: 24px; line-height: 1.3; font-weight: 500; margin: var(--sp-8) 0 var(--sp-4); padding-top: var(--sp-5); border-top: 1px solid var(--gray-300); }
+h3 { font-size: 18px; line-height: 1.35; font-weight: 500; margin: var(--sp-6) 0 var(--sp-3); }
+h4 { font-size: 15px; font-weight: 500; margin: var(--sp-5) 0 var(--sp-2); color: var(--gray-700); }
+p { margin: 0 0 var(--sp-4); }
+ul, ol { margin: 0 0 var(--sp-4); padding-left: var(--sp-5); }
+li { margin-bottom: var(--sp-2); }
+.lede { font-size: 18px; line-height: 1.55; color: var(--gray-700); margin-bottom: var(--sp-5); }
+.kicker { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--gray-500); margin-bottom: var(--sp-2); }
+.callout { background: var(--oat); border-left: 3px solid var(--clay); padding: var(--sp-4) var(--sp-5); border-radius: var(--r-sm); color: var(--gray-700); margin: var(--sp-5) 0; }
+.callout strong { color: var(--slate); }
+.callout p:last-child { margin-bottom: 0; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; margin: var(--sp-4) 0 var(--sp-5); background: var(--white); }
+.tbl th, .tbl td { text-align: left; padding: var(--sp-3); border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+.tbl th { font-weight: 500; color: var(--gray-500); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.tbl tr:hover td { background: var(--gray-100); }
+.scroll-x { overflow-x: auto; background: var(--white); border-radius: var(--r-sm); }
+pre.code { background: var(--white); border: 1px solid var(--gray-300); border-radius: var(--r-sm); padding: var(--sp-4); overflow-x: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; color: var(--gray-700); margin: 0 0 var(--sp-5); }
+.filebar { display: flex; justify-content: space-between; align-items: center; background: var(--gray-100); border: 1px solid var(--gray-300); border-bottom: 0; border-radius: var(--r-sm) var(--r-sm) 0 0; padding: 6px var(--sp-3); font-family: var(--font-mono); font-size: 12px; color: var(--gray-700); margin-top: var(--sp-4); }
+.filebar + pre.code { margin-top: 0; border-radius: 0 0 var(--r-sm) var(--r-sm); }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; line-height: 1.3; white-space: nowrap; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.badge-draft { background: var(--gray-100); color: var(--gray-700); }
+.badge-in-review { background: rgba(92, 124, 163, .14); color: var(--info); }
+.badge-done { background: rgba(120, 140, 93, .16); color: var(--success); }
+.badge-overdue { background: rgba(176, 74, 74, .14); color: var(--danger); }
+.badge-blocked { background: rgba(199, 142, 63, .14); color: var(--warning); }
+.risk { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: var(--r-xs); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; border: 1px solid; white-space: nowrap; }
+.risk-safe { color: var(--success); border-color: rgba(120,140,93,.35); background: rgba(120,140,93,.08); }
+.risk-look { color: var(--warning); border-color: rgba(199,142,63,.35); background: rgba(199,142,63,.08); }
+.risk-attn { color: var(--danger);  border-color: rgba(176,74,74,.35);  background: rgba(176,74,74,.08); }
+.card { background: var(--white); border-radius: var(--r-md); padding: var(--sp-4); transition: box-shadow 200ms var(--ease-out); }
+.card-outlined { border: 1px solid var(--gray-300); }
+.card-stripe { border: 1px solid var(--gray-300); border-left: 3px solid var(--clay); }
+.card-inset { background: var(--gray-100); border: 1px solid var(--gray-100); box-shadow: inset 0 1px 0 rgba(20,20,19,.04); }
+.card h3, .card h4 { margin-top: 0; }
+.card p:last-child, .card ul:last-child { margin-bottom: 0; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-4); margin: var(--sp-5) 0; }
+ol.numbered { list-style: none; padding-left: 0; counter-reset: n; }
+ol.numbered > li { counter-increment: n; position: relative; padding-left: var(--sp-7); margin-bottom: var(--sp-4); }
+ol.numbered > li::before { content: counter(n, decimal-leading-zero); position: absolute; left: 0; top: 1px; font-family: var(--font-mono); font-size: 12px; color: var(--clay); }
+footer.pagefoot { border-top: 1px solid var(--gray-300); margin-top: var(--sp-8); padding-top: var(--sp-5); font-size: 13px; color: var(--gray-500); display: flex; flex-wrap: wrap; gap: var(--sp-4); justify-content: space-between; }
+.nextprev { display: flex; gap: var(--sp-5); }
+@media (max-width: 640px) {
+  h1 { font-size: 30px; }
+  .wrap { padding: var(--sp-5) var(--sp-4) var(--sp-7); }
+  .nav-inner { padding: var(--sp-3) var(--sp-4); gap: var(--sp-3); }
+  .nav-brand { width: 100%; margin-right: 0; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="nav-inner">
+  <span class="nav-brand">flox extension research</span>
+  <a href="index.html">Overview</a>
+  <a class="here" href="research.html">Research</a>
+  <a href="architecture.html">Architecture</a>
+  <a href="changes.html">Changes</a>
+  <a href="manifest.html">Manifest</a>
+  <a href="plugins.html">Plugins</a>
+  <a href="examples.html">Examples</a>
+  <a href="risks.html">Risks</a>
+</div></nav>
+
+<div class="wrap">
+
+<div class="kicker">research/gh_extension_flox.md · 1,039 lines</div>
+<h1>The design document, <span class="accent">read closely</span></h1>
+
+<p class="lede">A PRD and technical plan for porting <code>gh extension</code> to
+<code>flox extension</code>, written before any code existed. It is unusually explicit about
+what it does not know — which turns out to be the most useful thing about it.</p>
+
+<h2>What the document is</h2>
+
+<p>Four parts: a product requirements document, a technical architecture with Rust trait sketches,
+a component-by-component mapping from Go to Rust, and a six-milestone implementation plan. It
+names its two reference points precisely — <code>github.com/cli/cli</code> as the implementation
+being ported and <code>github.com/flox/flox</code> as the target — and scopes itself to a v1
+minimum viable port with a roadmap sketched through v3.</p>
+
+<h3>It marks its own uncertainty</h3>
+
+<p>The most unusual feature of the document is a sourcing note in the header and a whole appendix
+devoted to what the author could not verify. Claims derived from third-party mirrors, PR
+discussions, and community blog posts rather than a direct read of <code>main</code> are tagged
+<code>[verify]</code> inline. Appendix A then lists exactly which files an implementing engineer
+should open first to confirm the shapes the design depends on.</p>
+
+<div class="callout">
+<p>Appendix A closes with a line that does more work than its length suggests: <em>any discrepancy
+with this document should be resolved in favor of what's in the repos; the design decisions here do
+not depend on any particular line number, only on the presence of the named concepts.</em></p>
+<p>That sentence is what lets the implementation diverge from the document without the document
+becoming wrong. It pre-authorizes the drift — which is worth remembering when you reach the
+<a href="manifest.html">manifest page</a> and find that the shipped schema is not the designed
+one.</p>
+</div>
+
+<h2>Part one — the product argument</h2>
+
+<h3>The problem</h3>
+
+<p>Flox users had no first-class way to extend the CLI. Every "extend flox" use case — org-specific
+wrappers, domain workflows, integrations that should not live in the core repo — had to be
+distributed as shell aliases, standalone binaries on <code>PATH</code>, or custom Nix expressions.
+The document's indictment of those three is precise: none compose with the flox environment model,
+none have a discovery or update story, and none make it obvious to a user that they are invoking
+an extension rather than a core command.</p>
+
+<h3>Why now — three forces</h3>
+
+<div class="grid-3">
+  <div class="card card-outlined">
+    <div class="kicker">Force one</div>
+    <h4>Activation was rewritten</h4>
+    <p>The activation subsystem became Rust in v1.9 and now <code>exec()</code>s the child in
+    place. An extension can therefore be a subprocess of an activation with exactly the same PID
+    semantics as any other activated command.</p>
+  </div>
+  <div class="card card-outlined">
+    <div class="kicker">Force two</div>
+    <h4>FloxHub is not ready to be the only channel</h4>
+    <p>FloxHub is the obvious long-term distribution surface, but GitHub is where the community
+    already is. Building GitHub-first buys adoption without foreclosing FloxHub.</p>
+  </div>
+  <div class="card card-outlined">
+    <div class="kicker">Force three</div>
+    <h4>The gh design is small and proven</h4>
+    <p>Roughly 2,000 lines of production Go in <code>pkg/cmd/extension/</code>, mapping cleanly
+    onto primitives flox already uses — <code>reqwest</code>, <code>toml</code>, shell-out git,
+    and <code>bpaf</code> subcommands.</p>
+  </div>
+</div>
+
+<h3>Goals, and the six non-goals stated to be argued with</h3>
+
+<p>The goals are unsurprising: install, list, remove, and upgrade from GitHub; support the three
+<code>gh</code> flavors; dispatch unknown <code>flox &lt;name&gt;</code> invocations; inherit the
+active environment by default; let a manifest declare a required environment; and abstract the
+source so FloxHub can be added later without breaking changes.</p>
+
+<p>The non-goals are the more interesting list, because the document says outright that they are
+stated so reviewers can see them rather than discover them:</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Non-goal</th><th>Stated rationale</th></tr></thead>
+<tbody>
+<tr><td>No sandboxing</td><td>An extension runs with the user's full privileges, exactly like <code>gh</code>. Trust is by code review, not technical enforcement.</td></tr>
+<tr><td>No signature verification</td><td>A checksum is recorded but not verified. <code>gh</code>'s build-provenance attestation is called interesting but out of scope.</td></tr>
+<tr><td>No curated registry</td><td>Discovery in v1 is searching the <code>flox-extension</code> GitHub topic. A registry follows FloxHub.</td></tr>
+<tr><td>No <code>search</code>, <code>browse</code>, <code>create</code>, or <code>exec</code></td><td>Deferred to v2 and v3.</td></tr>
+<tr><td>No binary re-publish layer</td><td>Release assets are pulled straight from GitHub.</td></tr>
+<tr><td>No overriding of built-in commands</td><td>Conflicts are rejected at install time.</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Two of these did not survive contact with implementation, and both moved in the safer direction.
+<code>search</code> shipped anyway, as <code>P08</code>. And the "recorded but not verified"
+checksum became verified — commit <code>f692e3016</code>, <em>verify advertised sha256 of binary
+asset</em>, landed during hardening. See the <a href="risks.html">risks page</a> for the full
+sequence.</p>
+
+<h2>Part two — the five primitives kept and the one thing changed</h2>
+
+<p>The document is explicit that this is a port, not an inspiration. It names five architectural
+primitives preserved from <code>gh</code> one-to-one, and exactly one place where flox deliberately
+diverges. That framing is the spine of the whole design.</p>
+
+<h3>Kept from gh, unchanged</h3>
+
+<ol class="numbered">
+<li><strong>The manager as sole orchestrator.</strong> Same methods, same name — an
+<code>ExtensionManager</code> owns install, list, remove, upgrade, and lookup. Nothing else
+mutates the extensions directory.</li>
+<li><strong>A per-extension directory holding the executable plus managed metadata.</strong> Same
+storage shape as <code>gh</code>; only the metadata file's name and format change
+(<code>state.toml</code> rather than <code>manifest.yml</code>).</li>
+<li><strong>Three kinds detected in the same order.</strong> Try a release with matching assets
+first, fall back to cloning. The user never declares which kind they are installing.</li>
+<li><strong>Dispatch by searching the managed directory, then <code>$PATH</code>.</strong> Managed
+first, because that directory is populated only by an explicit install — its precedence reflects
+user intent rather than ambient shell state.</li>
+<li><strong>Asset-name substring matching with an explicit override.</strong> The
+<code>installBin</code> algorithm reproduced literally, including the Apple Silicon to x86_64
+Rosetta fallback, plus an author-supplied template on top.</li>
+</ol>
+
+<h3>The one deliberate divergence</h3>
+
+<div class="callout">
+<p><strong>An extension may declare the flox environment it runs inside.</strong> A
+<code>gh</code> extension cannot express anything like this, because <code>gh</code> has no
+concept of an environment. This is the single place the design departs from its reference
+implementation, and the document is careful to say so — it is <em>the only place flox deliberately
+diverges</em>.</p>
+</div>
+
+<p>Concretely: the author manifest gains an <code>[environment]</code> stanza, and dispatch gains a
+three-way mode. The extension either inherits whatever the user has activated (the default),
+explicitly runs outside any environment, or pins a named environment that is activated for every
+invocation regardless of what the caller had.</p>
+
+<p>The design defends the default choice for the pinned case directly. When an author pins an
+environment and the user is <em>also</em> inside one, the pinned environment wins:</p>
+
+<blockquote style="margin:0 0 var(--sp-5); padding-left: var(--sp-5); border-left: 2px solid var(--gray-300); color: var(--gray-700);">
+An author who pins an environment does so because their extension needs it. Silently falling
+through to the user's env would be a footgun.
+</blockquote>
+
+<p>A strict alternative that errors instead is offered, and a third option that composes the two
+environments is deferred explicitly on the grounds that flox composition semantics were still
+evolving. All three of those decisions shipped. The mechanics are on the
+<a href="manifest.html">manifest page</a>; the runtime behavior is on the
+<a href="architecture.html">architecture page</a>.</p>
+
+<h2>Part three — the Go to Rust mapping</h2>
+
+<p>An eighteen-row table pairing each <code>gh</code> component with its proposed flox equivalent,
+naming both the Go file in <code>cli/cli</code> and the Rust file to create. A representative
+slice:</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>gh component</th><th>Proposed flox equivalent</th></tr></thead>
+<tbody>
+<tr><td><code>extensions.ExtensionManager</code> interface</td><td><code>ExtensionManager</code> async trait</td></tr>
+<tr><td><code>Dispatch(args, in, out, err)</code></td><td><code>dispatch::spawn_extension</code></td></tr>
+<tr><td>Unknown-subcommand fallback in <code>root.go</code></td><td>Two-phase <code>bpaf</code> parse in <code>main.rs</code></td></tr>
+<tr><td><code>$XDG_DATA_HOME/gh/extensions/</code></td><td><code>$XDG_DATA_HOME/flox/extensions/</code></td></tr>
+<tr><td><code>manifest.yml</code></td><td><code>state.toml</code></td></tr>
+<tr><td><code>installBin</code> release-asset resolver</td><td><code>github::resolve_asset</code></td></tr>
+<tr><td><code>gh-extension-precompile</code> Action</td><td><code>flox-extension-precompile</code> <span class="badge badge-draft">v2, not built</span></td></tr>
+<tr><td><code>browse</code> TUI</td><td><span class="badge badge-draft">v3, not built</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>The mapping largely held up: most proposed filenames exist today with roughly the proposed
+contents, and the module tree on the <a href="architecture.html">architecture page</a> is
+recognizably this table made real.</p>
+
+<div class="callout">
+<p><strong>With one row that did not survive.</strong> The <code>ExtensionSource</code> trait —
+the abstraction meant to let FloxHub become a second source without breaking changes — was never
+written. <code>source.rs</code> exists as a single-line comment reading
+<em>stub for P03</em>, and the proposed <code>floxhub.rs</code> was never created at all.</p>
+<p>That is notable because abstracting the source was listed as a v1 <em>goal</em>, not a v2 item.
+GitHub logic ended up living directly in <code>github.rs</code> and <code>manager.rs</code> with no
+trait boundary. See the <a href="changes.html">change inventory</a> for what that costs
+<code>P09</code>.</p>
+</div>
+
+<h2>Part four — the plan, and how it actually went</h2>
+
+<p>Seven milestones sized in engineer-weeks, ordered by dependency, each independently shippable
+behind a <code>FLOX_EXTENSIONS_ENABLE</code> feature flag. Total estimate: roughly ten
+engineer-weeks for one engineer, or about four calendar weeks for two, with only the environment
+milestone requiring deep familiarity with <code>flox-activations</code>.</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Milestone</th><th>Size</th><th>Became</th><th>Outcome</th></tr></thead>
+<tbody>
+<tr><td><code>M0</code> Skeleton and dispatch</td><td>S</td><td><code>P01</code></td><td><span class="badge badge-done">as designed</span></td></tr>
+<tr><td><code>M1</code> Manifest, layout, local install</td><td>M</td><td><code>P02</code></td><td><span class="badge badge-done">as designed</span></td></tr>
+<tr><td><code>M2</code> GitHub source — git/script</td><td>M</td><td><code>P03</code></td><td><span class="badge badge-done">as designed</span></td></tr>
+<tr><td><code>M3</code> GitHub source — binary release</td><td>M</td><td><code>P04</code></td><td><span class="badge badge-done">as designed</span></td></tr>
+<tr><td><code>M4</code> Upgrade-all and polish</td><td>S</td><td><code>P05</code></td><td><span class="badge badge-done">as designed</span></td></tr>
+<tr><td><code>M5</code> Environment integration</td><td>M</td><td><code>P06</code></td><td><span class="badge badge-done">as designed</span></td></tr>
+<tr><td><code>M6</code> Docs, telemetry, GA</td><td>S</td><td><code>P07</code></td><td><span class="badge badge-blocked">telemetry deferred</span></td></tr>
+<tr><td>—</td><td>—</td><td><code>P08</code></td><td><span class="badge badge-done">search, pulled forward from v2</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>The plan is the rare case of an estimate that held its shape. The dependency order was followed,
+every milestone landed, and the two deviations both went the direction you would want: one deferred
+item was the least load-bearing thing on the list, and one v2 feature arrived early.</p>
+
+<h4>What changed relative to the plan</h4>
+
+<ul>
+<li><strong>Telemetry was cut, not slipped.</strong> <code>P07-T04</code> and
+<code>P07-TS03</code> are marked <code>[~]</code> — <em>deferred per design review; revisit
+post-GA</em> — rather than left open. The GA criterion was met without them.</li>
+<li><strong>The feature flag inverted rather than disappeared.</strong> The plan said remove
+<code>FLOX_EXTENSIONS_ENABLE</code> at GA. What shipped is
+<code>FLOX_FEATURES_EXTENSIONS</code> defaulting to on, with the env var retained as an opt-out.
+Setting it to <code>0</code>, <code>false</code>, <code>no</code>, or <code>off</code> disables
+both the subcommand family and the dispatch fallback.</li>
+<li><strong>Example repos moved out of the GA milestone.</strong> <code>M6</code> listed them as a
+deliverable; they became separate projects <code>P07a</code>, <code>P07b</code>, and
+<code>P07c</code> so GA did not block on them.</li>
+<li><strong>The example org changed.</strong> The plan put the reference extensions in
+<code>flox-examples</code>. They live under <code>smorin</code>. The docs did not fully catch up —
+see the <a href="risks.html">risks page</a>.</li>
+</ul>
+
+<h2>What the document asked to be checked later</h2>
+
+<p>Section 2.11 lists seven open questions rather than pretending they were resolved. Their current
+status, which is the useful part:</p>
+
+<div class="scroll-x">
+<table class="tbl">
+<thead><tr><th>Open question</th><th>Where it landed</th></tr></thead>
+<tbody>
+<tr><td>Windows support, or macOS and Linux only</td><td><span class="risk risk-look">still open</span> No Windows path was built; <code>{ext}</code> renders <code>zip</code> on Windows and the matchers have no Windows tokens.</td></tr>
+<tr><td>Keeping the reserved-name list in sync with <code>Commands</code></td><td><span class="risk risk-safe">resolved</span> Built as proposed — <code>extension_drift_tests</code> in <code>commands/mod.rs</code> scrapes <code>flox --help</code> and asserts every visible command is in the list. Hidden commands are still listed by hand.</td></tr>
+<tr><td>Git transport — <code>git2</code>, <code>gix</code>, or shell out</td><td><span class="risk risk-safe">resolved</span> Reuses the existing <code>GitCommandProvider</code>, with one-off operations shelled out directly.</td></tr>
+<tr><td>Archive formats — support from day one or defer</td><td><span class="risk risk-safe">resolved</span> Supported, in <code>archive.rs</code>, with traversal protection added later.</td></tr>
+<tr><td>What a FloxHub extension fetch primitive would be</td><td><span class="risk risk-look">still open</span> <code>P09</code>, not started.</td></tr>
+<tr><td>Reentrancy when pinned and already inside that environment</td><td><span class="risk risk-safe">resolved</span> Checked via <code>_FLOX_ACTIVE_ENVIRONMENTS</code> before wrapping.</td></tr>
+<tr><td>Whether to emit telemetry</td><td><span class="risk risk-look">deferred</span> Recommended yes; cut at design review.</td></tr>
+</tbody>
+</table>
+</div>
+
+<footer class="pagefoot">
+  <span>Source: <code>flox-gh-plugin/research/gh_extension_flox.md</code></span>
+  <span class="nextprev">
+    <a href="index.html">← Overview</a>
+    <a href="architecture.html">Next: what was built →</a>
+  </span>
+</footer>
+
+</div>
+</body>
+</html>
